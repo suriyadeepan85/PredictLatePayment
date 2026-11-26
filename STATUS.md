@@ -1,0 +1,30 @@
+# Status
+
+**Last checkpoint:** November 26, 2026 · **Due:** November 30, 2026 (finish by November 29)
+
+## Current gate
+**G1: data contract.** Draft is in `docs/data_contract.md`, waiting for the owner's approval.
+
+## Done
+- Spec v2 created; spec v1 restored and unchanged
+- Repo connected; push works
+- Customer Invoices data profiled (`notebooks/01_profile_data.ipynb`, charts in `docs/img/`)
+- Data contract v1 drafted
+- Methodology set up: `CLAUDE.md`, `DECISIONS.md`, `OPEN_ITEMS.md`, `STATUS.md`, `specs/methodology.md`
+
+## Waiting for the owner
+1. Approve the data contract (G1), or list changes
+2. Confirm or change the seeded records in `DECISIONS.md` (all PROPOSED except D-007)
+3. Answer Q-001 and Q-002 in `OPEN_ITEMS.md`
+
+## Next
+1. G2: feature list (history as of each invoice date, leakage tests)
+2. Train the baseline and XGBoost; evaluation and fairness check; reviewer pass (G3)
+3. Streamlit app (Day 2), then demo and deck (Day 3)
+
+## Plan
+| Day | Focus | State |
+|---|---|---|
+| 1 | Data and model | In progress: G1 |
+| 2 | Application | Not started |
+| 3 | Demo and deck | Not started |

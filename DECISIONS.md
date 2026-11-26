@@ -1,0 +1,61 @@
+# Decisions and observations
+
+Format and rules: `specs/methodology.md`. Claude records as PROPOSED; only the owner changes status.
+
+Seeded on November 26, 2026 from the planning conversation (November 13 to 26). Records the owner has already agreed to in chat are still PROPOSED until confirmed here.
+
+## Scope and governance
+
+| ID | Type | Statement | Status | By | Evidence |
+|---|---|---|---|---|---|
+| D-001 | decision | Hackathon scope is Stage 1 only: score each invoice when it's created. Due November 30, 2026. Deliverables: a deck and a working application | PROPOSED | Owner | Owner, Nov 24: "stage one is sufficient for now" |
+| D-002 | observation | Judges are delivery leaders and AI practice heads | PROPOSED | Owner | Owner, Nov 24 |
+| D-003 | decision | No client data. The client's problem may be described; no client or customer names | PROPOSED | Owner | Owner, Nov 24: "Do not name customers like Walmart, Target" |
+| D-004 | decision | Stage 2 (interaction notes, 10-day re-check) is deferred until after the hackathon | PROPOSED | Owner | Owner, Nov 24: "We'll think about stage 2 later" |
+| D-005 | decision | The model must not flag customers unfairly | PROPOSED | Owner | Owner, Nov 24: "It should not unfairly flag" |
+| D-006 | decision | Light build: Claude builds in session, repo holds all state, owner approves at gates G1 (data contract), G2 (features), G3 (model and fairness results), G6 (demo script). Folders are laid out so it can grow into the full multi-agent build later | PROPOSED | Claude | Spec v2, section 17 |
+| D-007 | decision | Conversation-to-specification methodology, lean version (3 record files, evidence by file path) | APPROVED (owner, Nov 26) | Owner | Owner, Nov 26: "yes push"; `specs/methodology.md` |
+| D-008 | decision | Repo is authoritative for build specs; spec v2 (Claude Doc) is the product and pitch narrative; spec v1 kept unchanged | PROPOSED | Claude | `CLAUDE.md` |
+| D-009 | decision | Repository: github.com/suriyadeepan85/PredictLatePayment | PROPOSED | Owner | Owner, Nov 24 |
+
+## Data
+
+| ID | Type | Statement | Status | By | Evidence |
+|---|---|---|---|---|---|
+| D-010 | decision | Customer Invoices (50,000 rows, Kaggle) trains and tests Stage 1. IBM Late Payment Histories is used only to show reusability | PROPOSED | Owner | Owner, Nov 21: "Let's use what you proposed for data" |
+| D-011 | decision | Raw data never goes into git; kept in `data/raw/`, verified by SHA-256 | PROPOSED | Claude | `.gitignore`, `docs/data_contract.md` section 1 |
+| D-012 | decision | Late = paid more than **3 days** after the due date. Configurable. (Set to 5 days, then changed to 3 the same day) | PROPOSED | Owner | Owner, Nov 26: "change the grace period to 3 days" |
+| D-013 | decision | Split by time at October 1, 2019. Open invoices are a demo replay set, never used for accuracy | PROPOSED | Claude | Chart 1, `docs/img/data_profile_grace3.png` |
+| D-014 | decision | Column roles and quality rules Q1 to Q13 as written in the data contract | PROPOSED | Claude | `docs/data_contract.md` sections 4 and 5 |
+| D-015 | decision | Drop the 131 invoices whose due date is before their invoice date | PROPOSED | Claude | `docs/data_contract.md`, rule Q6 |
+| D-016 | decision | Payment terms are measured from the baseline date, not the posting date | PROPOSED | Claude | `docs/data_contract.md` section 4 |
+| D-017 | decision | Customer names are masked as "Customer 0001" and so on, everywhere | PROPOSED | Claude | `docs/data_contract.md` section 8 |
+| D-018 | decision | Profiling lives in a notebook the owner can run in SageMaker or locally | PROPOSED | Owner | Owner, Nov 26: "create"; `notebooks/01_profile_data.ipynb` |
+
+## Model, evaluation and fairness
+
+| ID | Type | Statement | Status | By | Evidence |
+|---|---|---|---|---|---|
+| D-020 | decision | Model: XGBoost on payment history built as of each invoice date; reasons in plain words from SHAP values | PROPOSED | Claude | Spec v2, section 8 |
+| D-021 | decision | Measure AUC and the share of late invoices caught in the top 20% of flags against a "late last time" baseline. Never plain accuracy | PROPOSED | Claude | Chart 3 (15% late rate) |
+| D-022 | decision | Fairness: names and customer IDs are never inputs; flag rates, false alarms and misses compared by business unit; no group's false-alarm rate above 1.25 times the overall rate unless that group genuinely pays late more often | PROPOSED | Claude | Spec v2, section 11; chart 4 |
+
+## Application
+
+| ID | Type | Statement | Status | By | Evidence |
+|---|---|---|---|---|---|
+| D-030 | decision | Streamlit app. Must: control panel, risk dashboard, invoice detail, model evidence. Should: Bedrock outreach draft, business impact page, IBM setup page. Could: AWS deployment, alerts | PROPOSED | Claude | Spec v2, sections 1.1 and 16 |
+| D-031 | decision | The AI drafts outreach; a human approves; nothing is sent automatically; every draft is logged | PROPOSED | Claude | Spec v2, section 16 |
+
+## Observations from the data (3-day grace)
+
+| ID | Type | Statement | Status | By | Evidence |
+|---|---|---|---|---|---|
+| D-040 | observation | 1,161 exact duplicate rows; every repeated doc_id is an exact copy | PROPOSED | Claude | Notebook section 3 |
+| D-041 | observation | All open invoices were posted after all paid ones | PROPOSED | Claude | Chart 1 |
+| D-042 | observation | Late share: 42% at 0 days, 15% at 3, 9% at 5, 7% at 7 | PROPOSED | Claude | Chart 3 |
+| D-043 | observation | Late rate by business unit: U001/USD 11%, CA02/CAD 54%, U002 50%, U013 42%; overall 15% | PROPOSED | Claude | Chart 4 |
+| D-044 | observation | 27% of rows come from 2 customer numbers with retailer-like names; up to 11 name spellings per customer number | PROPOSED | Claude | Notebook section 8 |
+| D-045 | observation | 861 of 1,423 customers have fewer than 5 invoices; 99% of open invoices' customers have paid history | PROPOSED | Claude | Notebook sections 5 and 7 |
+| D-046 | observation | The dataset has no grace-period or reminder field | PROPOSED | Claude | `docs/data_contract.md` section 3 |
+| D-047 | observation | After cleaning: 48,702 invoices; train 26,522 (15.3% late), test 12,526 (13.5% late), replay 9,654 | PROPOSED | Claude | `docs/data_contract.md` section 6 |
