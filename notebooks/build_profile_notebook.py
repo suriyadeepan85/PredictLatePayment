@@ -19,7 +19,7 @@ Every number here should match what Claude reported. If yours differ, that's wor
 Expected file checksum (SHA-256): `3409441a8ecc48438a0fd42421ce3230d95305f7afcefb732bf232a948b6cf88`"""),
     md("## Settings"),
     code("""DATA_PATH = "../data/raw/customer_invoices.csv"   # or "s3://your-bucket/raw/dataset.csv" (needs s3fs)
-GRACE_DAYS = 3        # days after the due date before an invoice counts as late (decision pending at G1)
+GRACE_DAYS = 3        # days after the due date before an invoice counts as late (decided: 3 days)
 CUTOFF_DATE = "2019-10-01"  # paid invoices before this train the model; after it, test"""),
     md("## 1. Load and check the file"),
     code("""import hashlib
@@ -114,6 +114,71 @@ pd.DataFrame({
     "invoices": [len(train), len(test), len(open_)],
     "late_rate": [train["late"].mean().round(3), test["late"].mean().round(3), None],
 }, index=["train (paid, before cutoff)", "test (paid, after cutoff)", "replay (open)"])"""),
+    md("""## 12. The four charts behind the data contract
+
+One figure, four questions: how the data splits in time, what "late" looks like, what the grace period does, and which groups differ. It uses seaborn on top of matplotlib, and saves a PNG for the deck."""),
+    code("""import seaborn as sns
+import matplotlib.dates as mdates
+from pathlib import Path
+
+sns.set_theme(style="white", context="notebook", font_scale=0.95)
+BLUE, GREY, RED = "#2a6fdb", "#9aa3ad", "#d1495b"
+fig, ax = plt.subplots(2, 2, figsize=(12, 8.2), dpi=150)
+
+# 1. Paid vs open over time, with the train/test cutoff
+monthly = (df.assign(month=df["invoice_date"].dt.to_period("M").dt.to_timestamp(),
+                     status=df["isOpen"].map({0: "Paid (train and test)", 1: "Open (demo replay)"}))
+             .groupby(["month", "status"]).size().unstack(fill_value=0))
+a = ax[0, 0]
+a.bar(monthly.index, monthly["Paid (train and test)"], width=25, color=BLUE, label="Paid (train and test)")
+a.bar(monthly.index, monthly["Open (demo replay)"], width=25, bottom=monthly["Paid (train and test)"], color=GREY, label="Open (demo replay)")
+a.axvline(pd.Timestamp(CUTOFF_DATE), ls="--", c="k", lw=1)
+a.text(pd.Timestamp(CUTOFF_DATE) + pd.Timedelta(days=7), monthly.sum(axis=1).max() * 0.95, "train | test cutoff", fontsize=9)
+a.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1, 4, 7, 10]))
+a.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+a.set_title("1. Open invoices all come after the paid ones", loc="left", fontweight="bold")
+a.set_ylabel("Invoices per month"); a.set_xlabel(""); a.legend(frameon=False, fontsize=9, loc="upper left")
+
+# 2. Days paid after the due date, with the grace line
+a = ax[0, 1]
+sns.histplot(paid["days_late"].clip(-20, 40), bins=range(-20, 42), color=BLUE, edgecolor=None, alpha=1, ax=a)
+a.axvline(GRACE_DAYS + 0.5, c=RED, lw=1.5)
+a.text(GRACE_DAYS + 1.5, a.get_ylim()[1] * 0.85, f"{GRACE_DAYS}-day grace:\\nlate = right of line", color=RED, fontsize=9)
+a.set_title("2. Most invoices are paid within days of the due date", loc="left", fontweight="bold")
+a.set_xlabel("Days paid after due date (end bars hold everything beyond -20 / 40)"); a.set_ylabel("Paid invoices")
+
+# 3. Share counted late at each grace period
+a = ax[1, 0]
+grid = pd.DataFrame({"grace_days": [0, 1, 2, 3, 5, 7, 10, 15]})
+grid["late_pct"] = grid["grace_days"].apply(lambda g: (paid["days_late"] > g).mean() * 100)
+colors = [RED if g == GRACE_DAYS else BLUE for g in grid["grace_days"]]
+sns.barplot(data=grid, x="grace_days", y="late_pct", hue="grace_days", palette=colors, legend=False, saturation=1, ax=a)
+for i, v in enumerate(grid["late_pct"]):
+    a.text(i, v + 0.8, f"{v:.0f}%", ha="center", fontsize=9)
+a.set_title("3. The grace period decides what counts as late", loc="left", fontweight="bold")
+a.set_xlabel("Grace period (days)"); a.set_ylabel("Paid invoices counted late (%)")
+
+# 4. Late rate by business unit and currency (groups with 50+ invoices)
+a = ax[1, 1]
+grp = (paid.groupby(["business_code", "invoice_currency"])["late"].agg(n="size", rate="mean").reset_index()
+           .query("n >= 50").sort_values("rate", ascending=False))
+grp["label"] = grp["business_code"] + " / " + grp["invoice_currency"] + "\\n(n=" + grp["n"].map("{:,}".format) + ")"
+grp["pct"] = grp["rate"] * 100
+sns.barplot(data=grp, y="label", x="pct", hue="label",
+            palette=[RED if c == "CAD" else BLUE for c in grp["invoice_currency"]], legend=False, saturation=1, ax=a)
+for i, v in enumerate(grp["pct"]):
+    a.text(v + 0.4, i, f"{v:.0f}%", va="center", fontsize=9)
+overall = paid["late"].mean() * 100
+a.axvline(overall, ls="--", c="k", lw=1)
+a.text(overall + 0.4, len(grp) - 0.55, f"overall {overall:.0f}%", fontsize=9)
+a.set_title("4. Late rates differ by business unit and currency", loc="left", fontweight="bold")
+a.set_xlabel(f"Late rate with {GRACE_DAYS}-day grace (%)"); a.set_ylabel("")
+
+sns.despine(fig)
+fig.tight_layout()
+out = Path("../docs/img"); out.mkdir(parents=True, exist_ok=True)
+fig.savefig(out / f"data_profile_grace{GRACE_DAYS}.png")
+plt.show()"""),
     md("""## Your checkpoint
 
 Compare with what Claude reported (grace 3 days):
