@@ -17,7 +17,7 @@ Score every model once on its held-out test set and give the G3 verdict: does it
 - Pass or fail against ML criteria M1 to M5 (`ml_engineer.md` section 7).
 
 ## 4. Deliverables
-`reports/evaluation_<date>.md` and `notebooks/07_evaluation.ipynb`, which the owner can rerun.
+`reports/evaluation_<date>.md` and `notebooks/08_evaluation.ipynb`, which the owner can rerun.
 
 ## 5. Acceptance criteria
 Every number in the deck and on the model evidence screen comes from this report.

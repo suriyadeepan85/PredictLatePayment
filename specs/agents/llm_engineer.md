@@ -22,7 +22,7 @@ Note text from Dataset C; risk scores and reasons from `src/model/predict.py`; m
 5. Prompts live in `src/features/prompts/` and `app/prompts/` as text files under version control.
 
 ## 4. Deliverables
-`src/features/notes.py`, `app/outreach.py`, `app/streamlit_app.py`, prompts, tests, `notebooks/04_note_features.ipynb`.
+`src/features/notes.py`, `app/outreach.py`, `app/streamlit_app.py`, prompts, tests, `notebooks/05_note_features.ipynb`.
 
 ## 5. Acceptance criteria
 - Note reader: tests T1 to T5 in `specs/note_features.md` pass.

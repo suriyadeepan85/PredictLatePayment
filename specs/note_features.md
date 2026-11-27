@@ -44,7 +44,7 @@ Extracted per note by the LLM, then combined for each invoice using only that cu
 ## 5. Interface (PROPOSED)
 - `src/features/notes.py`: `extract(notes_df) -> signals_df` (one row per note) and `aggregate(signals_df, invoices_df) -> features_df` (one row per invoice, columns `s1_open_dispute` … `s7_open_claim`).
 - Output file: `data/generated/note_signals.parquet`, never committed.
-- Notebook: `notebooks/04_note_features.ipynb` runs extraction on a sample, shows the signal distributions, and runs the section 7 checks.
+- Notebook: `notebooks/05_note_features.ipynb` runs extraction on a sample, shows the signal distributions, and runs the section 7 checks.
 
 ## 6. Constraints
 - No real names in prompts, outputs or logs.
@@ -66,7 +66,7 @@ Extracted per note by the LLM, then combined for each invoice using only that cu
 - A near-perfect Model B triggers the leakage check in contract section 6, rule 7.
 
 ## 9. Deliverables
-`src/features/notes.py`, `tests/test_notes.py`, `notebooks/04_note_features.ipynb`, the extraction prompt in `src/features/prompts/note_reader.txt`, and a short test report in `reports/`.
+`src/features/notes.py`, `tests/test_notes.py`, `notebooks/05_note_features.ipynb`, the extraction prompt in `src/features/prompts/note_reader.txt`, and a short test report in `reports/`.
 
 ## 10. Open issues and assumptions
 - A-006: disputes are raised before the Stage 2 day.

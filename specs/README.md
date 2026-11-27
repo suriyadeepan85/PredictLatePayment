@@ -17,7 +17,7 @@ The repo is the source for rebuilding the prototype without the chat (D-077). Me
 | Component | File | Owner role | Gate | State |
 |---|---|---|---|---|
 | Data contract | `../docs/data_contract.md` | Data Engineer | G1 | APPROVED v1.4 |
-| Feature list | `features.md` | ML Engineer | G2 | Next |
+| Feature list | `features.md` | ML Engineer | G2 | v0.1, waiting for G2 approval (D-080) |
 | Note features | `note_features.md` | LLM Engineer | G2 | v0.1; signals APPROVED |
 | Models, evaluation, fairness | `ml_engineer.md` sections 5 to 7, then `evaluation.md` | ML Engineer, Evaluator | G3 | Not started |
 | App and outreach | `app.md` | LLM Engineer | before G6 | Not started |

@@ -19,7 +19,7 @@ The ML Engineer may not change labels, splits, scoring times, column roles or fa
 `docs/data_contract.md` v1.4 (APPROVED). Cleaned tables from the Data Engineer; note signals from the LLM Engineer (`specs/note_features.md`).
 
 ## 3. Feature engineering
-Defined in `specs/features.md` (gate G2, to be written). Fixed limits from the contract: history only from invoices paid before the cut-off; the history count is always a feature; history group none / limited / enough (0 / 1-4 / 5+, APPROVED, D-061); average days late capped at ±90; customer IDs and names are never features.
+Defined in `specs/features.md` (gate G2). Fixed limits from the contract: history only from invoices paid before the cut-off; the history count is always a feature; history group none / limited / enough (0 / 1-4 / 5+, APPROVED, D-061); average days late capped at ±90; customer IDs and names are never features.
 
 ## 4. Target and labeling
 Late = paid more than 3 calendar days after the due date (APPROVED, D-012, D-056). Labels only for paid invoices. Open invoices are never in any metric.
@@ -52,4 +52,4 @@ Saved models in `models/` (never committed if over 50 MB), each with a JSON card
 Unit tests for feature cut-offs, no outcome columns in inputs, reason lookup coverage. Monitoring is out of scope for the hackathon; the full build adds drift checks on late rate and score distribution (the IBM test set already shows a lower late rate: 21.5% against 30.3% in training).
 
 ## 11. Execution environment and infrastructure
-Python 3.11, pandas, scikit-learn, xgboost, shap. Runs on a laptop or a SageMaker notebook. Training takes minutes; no GPU needed. Notebooks: `05_stage1_model.ipynb`, `06_stage2_models.ipynb`, importing from `src/`.
+Python 3.11, pandas, scikit-learn, xgboost, shap. Runs on a laptop or a SageMaker notebook. Training takes minutes; no GPU needed. Notebooks: `06_stage1_model.ipynb`, `07_stage2_models.ipynb`, importing from `src/`.
