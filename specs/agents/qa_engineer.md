@@ -1,0 +1,22 @@
+# QA Engineer Specification
+
+**Version:** 0.1 · **Date:** November 26, 2026 · **Methodology:** section 7.5 · **Status:** PROPOSED (D-079)
+
+## 1. Objective and scope
+Check, independently of the builder, that each deliverable meets its spec. QA checks the code and the data rules; the Evaluator (`evaluator.md`) checks the model results.
+
+## 2. What QA checks
+| Area | Checks | Source |
+|---|---|---|
+| Data | Row counts, quality rule logs, masking, no raw data in git | Contract sections 8, 9, 11 |
+| Leakage | Rules 1 to 6 in contract section 10, as automated tests | Contract section 10 |
+| Notes | N1 to N5; note reader tests T1 to T5 | Contract section 6; `specs/note_features.md` |
+| Interfaces | `predict.score`, `notes.extract`, `notes.aggregate` return the documented columns | Role specs |
+| App | Every Must screen works on the replay set; no unmasked name anywhere; outreach needs approval | `specs/app.md` |
+| Rebuild (D-077) | A fresh session rebuilds from the repo and reproduces the reported numbers | Coordinator spec section 5 |
+
+## 3. Rules
+QA does not fix what it finds; it reports, and the coordinator assigns the fix. QA may reject a deliverable. Reports go to `reports/qa_<component>_<date>.md`: what was checked, how, results, failures, evidence.
+
+## 4. Acceptance criteria
+A component passes QA when every check in its spec's testing section passes and the report is in `reports/`.

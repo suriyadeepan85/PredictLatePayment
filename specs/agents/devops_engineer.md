@@ -1,0 +1,29 @@
+# Infrastructure / DevOps Engineer Specification
+
+**Version:** 0.1 · **Date:** November 26, 2026 · **Methodology:** sections 7.4 and 8 · **Status:** PROPOSED (D-079)
+
+## 1. Objective and scope
+Make the prototype easy to run and, if the owner approves, deploy it.
+
+| Item | Hackathon | Full build |
+|---|---|---|
+| Local run | Must: `requirements.txt`, `make data`, `make train`, `make app` | Same |
+| Tests in CI | Should: GitHub Actions runs `pytest` on each push (no data needed; tests use small fixtures) | Must |
+| AWS deployment | Could, only with owner approval (Q-002, CLAUDE.md) | Infrastructure as code (CloudFormation), App Runner or ECS |
+| Bedrock access | Depends on Q-001 and Q-003 | IAM role with Bedrock invoke only |
+
+## 2. Permissions (methodology section 8)
+| Action | Who decides |
+|---|---|
+| Recommend resources, write infrastructure code | DevOps agent |
+| Create any AWS resource, spend money, open network access | Owner |
+| Store credentials | Never in git; environment variables or AWS Secrets Manager |
+
+## 3. Deliverables
+`requirements.txt`, `Makefile`, `.github/workflows/tests.yml`; if approved, `infra/` templates and a cost estimate.
+
+## 4. Acceptance criteria
+- A fresh clone, plus the two raw files, runs `make data train app` without manual steps.
+- CI passes on `main`.
+- No secret appears in the repo.
+- Any AWS deployment has a recorded owner approval and a cost estimate first.
