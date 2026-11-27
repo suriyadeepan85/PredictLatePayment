@@ -13,7 +13,7 @@ Format and rules: `specs/methodology.md`. Seeded November 26, 2026.
 | Q-005 | Add results at 0, 5 and 7 days of grace to the evaluation? | OPEN | Owner | G3 |
 | Q-006 | Update spec v2 to the 3-day grace period and the cleaned counts? | OPEN | Owner | Pitch narrative |
 | Q-007 | Does a separate Development Methodology Specification exist anywhere? | OPEN | Owner | None |
-| Q-008 | Note features: run on IBM only (real dispute events behind the notes), or on the 50,000-row data as illustrative (no real events behind them)? | OPEN | Owner | Note features spec |
+| Q-008 | Note features: run on IBM only (real dispute events behind the notes), or on the 50,000-row data as illustrative (no real events behind them)? | RESOLVED (D-059) | Owner | Note features spec |
 | Q-009 | Is the 3-day grace period counted in calendar days or business days? | RESOLVED (D-056) | Owner | G1 |
 | Q-010 | Minimum number of prior paid invoices for "sufficient" history; to be set from profiling | OPEN | Claude to profile, owner to approve | G1 / G2 |
 | Q-011 | Data contract v1.1 (owner's draft): adopt it, and extend it for notes and the 10-day scoring time? | RESOLVED (D-057) | Owner | G1 |
