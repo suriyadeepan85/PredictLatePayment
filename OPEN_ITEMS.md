@@ -15,7 +15,7 @@ Format and rules: `specs/methodology.md`. Seeded November 26, 2026.
 | Q-007 | Does a separate Development Methodology Specification exist anywhere? | OPEN | Owner | None |
 | Q-008 | Note features: run on IBM only (real dispute events behind the notes), or on the 50,000-row data as illustrative (no real events behind them)? | RESOLVED (D-059) | Owner | Note features spec |
 | Q-009 | Is the 3-day grace period counted in calendar days or business days? | RESOLVED (D-056) | Owner | G1 |
-| Q-010 | Minimum number of prior paid invoices for "sufficient" history; to be set from profiling | OPEN | Claude to profile, owner to approve | G1 / G2 |
+| Q-010 | Minimum number of prior paid invoices for "sufficient" history; to be set from profiling | RESOLVED (D-061) | Claude to profile, owner to approve | G1 / G2 |
 | Q-011 | Data contract v1.1 (owner's draft): adopt it, and extend it for notes and the 10-day scoring time? | RESOLVED (D-057) | Owner | G1 |
 
 ## Assumptions
@@ -27,3 +27,4 @@ Format and rules: `specs/methodology.md`. Seeded November 26, 2026.
 | A-003 | The meaning of payment-term codes (for example NAA8) | OPEN | Undocumented |
 | A-004 | A public invoice dataset is close enough to the client's billing data to be credible | OPEN | Spec v2, A4 |
 | A-005 | The approach transfers to the client; the trained model does not and is retrained there | OPEN | Spec v2, section 20 |
+| A-006 | IBM disputes are raised before the Stage 2 scoring date (due date minus 10 days), so dispute notes dated before then are realistic | OPEN | The data has no dispute date |

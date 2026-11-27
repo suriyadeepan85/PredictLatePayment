@@ -1,60 +1,128 @@
-# Data Contract v1: Customer Invoices (Stage 1)
+# Data Contract v1.2: Late Payment Prediction (Stage 1 and Stage 2)
 
 **Status:** draft for gate G1 review · **Date:** November 26, 2026 · **Owner:** Suriyadeepan Narayanasamy
+**Based on:** the owner's v1.1 (feature eligibility, history coverage, prediction-time rules), extended for the approved scope changes: note features and a second prediction 10 days before the due date (D-050, D-051, D-057, D-059).
 
-This contract defines what one row means, what each column may be used for, what "late" means, and the quality rules the data must pass before any model trains. Every later step (features, model, fairness check, app) reads the data through this contract.
+This contract defines the data, the targets, the quality requirements and the rules for what may be used at prediction time. It does not select the final models or define application behaviour.
 
-## 1. Source
+## 1. Datasets and permitted use
 
-| Item | Value |
-|---|---|
-| Dataset | Customer Invoices (Kaggle: `pradumn203/payment-date-prediction-for-invoices-dataset`) |
-| Licence | CC BY-NC 4.0 (non-commercial use; internal demo only) |
-| File | `dataset.csv`, 50,000 rows, 19 columns |
-| SHA-256 | `3409441a8ecc48438a0fd42421ce3230d95305f7afcefb732bf232a948b6cf88` |
-| Storage | Local `data/raw/` only. Never committed to git |
+| Item | Dataset A: Customer Invoices | Dataset B: IBM Late Payment Histories |
+|---|---|---|
+| Used for | Stage 1 model (train and test), demo replay | Stage 2 model (train and test), reusability demo |
+| Source | Kaggle `pradumn203/payment-date-prediction-for-invoices-dataset` | IBM sample `WA_Fn-UseC_-Accounts-Receivable.csv` |
+| Licence | CC BY-NC 4.0; internal demo only | None stated; internal demo only, pending organizer confirmation (Q-001) |
+| Size | 50,000 rows, 19 columns | 2,466 rows, 12 columns, 100 customers |
+| SHA-256 | `3409441a8ecc48438a0fd42421ce3230d95305f7afcefb732bf232a948b6cf88` | Recorded on first load |
+| Storage | `data/raw/` only; never in git | `data/raw/` only; never in git |
+| Dataset C: synthetic notes | Generated from Dataset B (section 6); stored in `data/generated/`; never in git | |
 
-## 2. Grain
+Licence limits apply to development, demonstration and any distribution.
 
-One row = one invoice, identified by `doc_id`. After the quality rules in section 5, `doc_id` is unique.
+## 2. Grain and keys
 
-## 3. Label
+- Dataset A: one row = one invoice, key `doc_id`, unique after cleaning.
+- Dataset B: one row = one invoice, key `invoiceNumber`, unique.
+- Dataset C: one row = one note, key `note_id`, linked to Dataset B by `invoiceNumber`.
 
-- **Late** = `clear_date` is more than **3 days** after the due date (`grace_days: 3`, set in config).
-- The label exists only for paid invoices (`isOpen = 0`).
-- 3 days is a business assumption, not a fact from the data (the dataset has no grace or reminder field). Results will also be reported at 0, 5 and 7 days.
+## 3. Targets and labels
 
-## 4. Column roles
+- **Late = 1:** paid more than **3 calendar days** after the due date (D-012, D-056). **Not late = 0:** paid on time or within 3 calendar days.
+- Labels exist only for paid invoices.
+- The 3-day grace period is a business assumption; the data has no grace or reminder field. Sensitivity at 0, 5 and 7 days is reported as supporting analysis only, not as extra labels.
+- Changing the grace period changes the target and requires relabelling, retraining and re-evaluation.
+- Both stages predict the same target. They differ in scoring time and inputs (section 4).
 
-Roles: **input** (model feature), **history key** (builds features from earlier invoices only), **outcome** (label and history only, never an input for its own invoice), **split** (paid vs open only), **ID** (join and display), **masked** (display only, replaced by a neutral label), **dropped**.
+## 4. Scoring times and feature cut-offs
+
+| Stage | Dataset | Scoring time | Information allowed |
+|---|---|---|---|
+| Stage 1 | A | The invoice's posting date | Invoice fields; history from the customer's invoices **paid before the posting date** |
+| Stage 2 | B | **Due date minus 10 calendar days** | Stage 1 inputs, history from invoices **paid before the Stage 2 scoring date**, and signals from notes dated **on or before** the Stage 2 scoring date |
+
+- No feature may use information unavailable at its stage's scoring time.
+- Stage 2 applies only where the scoring date is on or after the invoice date. All Dataset B invoices have 30-day terms, so it always applies there.
+
+## 5. Column roles
+
+Roles: **input**, **history key** (finds eligible prior invoices; never a raw feature), **outcome** (label and history only; never an input for its own invoice), **event source** (used only to generate notes; never a model input), **split**, **ID**, **masked**, **dropped**.
+
+### Dataset A: Customer Invoices
 
 | Column | Type | Role | Rule |
 |---|---|---|---|
 | doc_id | integer | ID | Unique after cleaning; join and display only |
-| cust_number | string | History key | Builds history as of the invoice date; never a raw input |
-| name_customer | string | Masked | Shown as "Customer 0001" and so on, mapped from `cust_number`; never an input, never displayed raw |
-| posting_date | date | Input (as-of date) | Invoice date; all history uses only invoices paid before this date |
-| due_in_date | date (YYYYMMDD) | Input | Due date; used for terms and for computing lateness |
-| baseline_create_date | date (YYYYMMDD) | Input | Start of payment terms; terms_days = due date minus baseline date |
-| total_open_amount | float | Input | Must be above 0 |
-| cust_payment_terms | category | Input | Codes with fewer than 20 rows grouped into OTHER |
-| business_code | category | Input and fairness group | Codes with fewer than 20 rows grouped into OTHER; fairness reported by this column |
-| invoice_currency | category | Input | Nearly identical to business_code (2 rows differ); kept as input, not used as a separate fairness group |
-| clear_date | date | Outcome | Label and history only; never an input for its own invoice |
-| isOpen | 0/1 | Split | 0 = paid (train and test), 1 = open (demo replay) |
-| invoice_id | integer | Dropped | Duplicate of doc_id |
-| document type | category | Dropped (after row filter) | Only RV rows kept |
-| buisness_year | integer | Dropped | Already in posting_date |
-| document_create_date | date | Dropped | Same as posting_date |
-| document_create_date.1 | date | Dropped | Same as posting_date |
-| posting_id | integer | Dropped | Constant |
-| area_business | float | Dropped | 100% empty |
+| cust_number | string | History key | Never a raw feature |
+| name_customer | string | Masked | Replaced with "Customer 0001" and so on; never a feature, never displayed raw |
+| posting_date | date | Input / as-of date | Stage 1 scoring time |
+| due_in_date | date | Input | Terms and target construction |
+| baseline_create_date | date | Input | terms_days = due date minus baseline date |
+| total_open_amount | numeric | Input | Must be above 0 |
+| cust_payment_terms | category | Input | Fewer than 20 rows → OTHER |
+| business_code | category | Input / fairness group | Fewer than 20 rows → OTHER; group-level evaluation reported here |
+| invoice_currency | category | Input | Nearly identical to business_code; not a separate fairness group |
+| clear_date | date | Outcome | Label and eligible history only |
+| isOpen | 0/1 | Split | 0 = paid (train/test), 1 = open (demo replay only) |
+| invoice_id, document type, buisness_year, document_create_date, document_create_date.1, posting_id, area_business | various | Dropped | Duplicate, constant, empty, or row filter only (keep RV) |
 
-## 5. Quality rules
+### Dataset B: IBM Late Payment Histories
 
-Applied in this order. Each run logs how many rows each rule removed. Any failure on the checks marked "fail" stops the pipeline.
+| Column | Type | Role | Rule |
+|---|---|---|---|
+| invoiceNumber | string | ID | Unique; join key for notes |
+| customerID | string | History key | Never a raw feature |
+| countryCode | category | Input / fairness group | Group-level evaluation reported here |
+| InvoiceDate | date | Input | Invoice date |
+| DueDate | date | Input | Stage 2 scoring time = DueDate minus 10 days; target construction |
+| InvoiceAmount | numeric | Input | Must be above 0 |
+| PaperlessBill | category | Input | Known at invoice time |
+| Disputed | Yes/No | Event source | Used only to decide which invoices get dispute notes. Never a model input, because the date the dispute was raised is unknown |
+| SettledDate, DaysToSettle, DaysLate | date / integer | Outcome | Label and eligible history only |
+| PaperlessDate | date | Dropped | Captured by PaperlessBill |
 
-| # | Rule | Action | Rows affected (this file) |
+## 6. Synthetic notes (Dataset C)
+
+| Column | Type | Rule |
+|---|---|---|
+| note_id | string | Unique |
+| invoiceNumber | string | Links to Dataset B |
+| customerID | string | Copied from Dataset B |
+| note_date | date | Between the invoice date and the Stage 2 scoring date |
+| author_role | category | Customer service or receivables analyst |
+| channel | category | Call, email or portal |
+| note_text | string | Synthetic; contains no real names |
+
+**Generation rules (blind generation):**
+1. Notes never create or change an outcome. Late or on time always comes from Dataset B.
+2. The generator sees only: invoiceNumber, customerID, InvoiceDate, DueDate, InvoiceAmount, PaperlessBill and Disputed. Outcome columns are removed in code before generation.
+3. Notes describe real events only: a disputed invoice gets a dispute thread; an undisputed one gets routine notes.
+4. Realistic contradictions are added: resolved disputes, frustrated customers who pay on time, routine notes on invoices that end up late.
+5. The note reader (LLM extraction) is tested on Bitext's labelled requests, not on our own notes.
+6. Leakage alarm: if Stage 2 looks near-perfect, generation is checked for leaks. A modest gain over Stage 1 is expected.
+7. Every reported Stage 2 result is labelled as using synthetic notes anchored to real dispute events.
+
+The extracted signals (for example open dispute, sentiment, promise to pay, contacts in the last 30 days) and the extraction prompt are defined in the note features spec, not here.
+
+## 7. Customer history
+
+Applies to both datasets, using each stage's cut-off from section 4.
+
+1. Use only the same customer's invoices paid before the stage's scoring time.
+2. Never use the current invoice's clear date, label, days late, or any future outcome.
+3. Keep the count of eligible prior paid invoices as a feature.
+4. A customer with no eligible history must not get an average lateness of 0; history availability is explicit.
+5. **History groups (D-061):** none = 0 prior paid invoices, limited = 1 to 4, enough = 5 or more. Evidence: `notebooks/02_history_profile.ipynb`.
+6. Candidate measures: prior late share, average days late, prior late count, recency, variability. Exact definitions and lookback windows go in the feature spec (gate G2).
+7. Average days late is capped at ±90 days at feature time.
+8. Model performance is reported separately for each history group.
+
+## 8. Quality rules
+
+Applied in this order. Row counts affected by each rule are logged. Any rule marked Fail stops the pipeline.
+
+### Dataset A
+
+| # | Rule | Action | Rows affected |
 |---|---|---|---|
 | Q1 | Exact duplicate rows | Drop | 1,161 |
 | Q2 | Same doc_id with different values | Fail | 0 |
@@ -63,47 +131,71 @@ Applied in this order. Each run logs how many rows each rule removed. Any failur
 | Q5 | Date fails to parse | Fail | 0 |
 | Q6 | Due date before invoice date | Drop and log | 131 |
 | Q7 | Clear date before invoice date | Fail | 0 |
-| Q8 | Paid invoice without a clear date, or open invoice with one | Fail | 0 |
+| Q8 | Paid without clear date, or open with one | Fail | 0 |
 | Q9 | Amount at or below 0 | Fail | 0 |
 | Q10 | Payment terms outside 0 to 120 days | Fail | 0 |
 | Q11 | Column more than 95% missing, or 99.9% one value | Drop column | area_business, posting_id |
-| Q12 | Category with fewer than 20 rows | Group into OTHER | 40 payment-term codes; business units U005, U007 |
-| Q13 | History averages of days late | Cap at ±90 days | Applied at feature time |
+| Q12 | Category with fewer than 20 rows | Group into OTHER | 40 payment-term codes; U005, U007 |
+| Q13 | History average days late | Cap at ±90 days | At feature time |
 
-## 6. Result after cleaning
+### Dataset B
 
-| Set | Rows | Late rate (3-day grace) | Use |
+The same rules apply where the columns exist (Q2, Q4, Q5, Q7, Q9). Profiled so far: 2,466 unique invoices, no missing values, no settled date before the invoice date. Full counts are added when the Stage 2 pipeline is built.
+
+### Dataset C
+
+| # | Rule | Action |
+|---|---|---|
+| N1 | Note linked to an invoice that doesn't exist | Fail |
+| N2 | Note dated after the Stage 2 scoring date or before the invoice date | Fail |
+| N3 | Generator input contains an outcome column | Fail |
+| N4 | Note text contains a real company or person name | Fail |
+
+## 9. Dataset splits
+
+| Set | Rows | Late rate (3-day grace) | Permitted use |
 |---|---|---|---|
-| All clean invoices | 48,702 | | |
-| Paid | 39,048 | 14.7% (5,757 late) | |
-| Train: paid, posted before Oct 1, 2019 | 26,522 | 15.3% | Model training |
-| Test: paid, posted Oct 1, 2019 onward | 12,526 | 13.5% | All accuracy and fairness numbers |
-| Replay: open | 9,654 | none (no outcome) | Demo only, never for accuracy |
+| A: all clean invoices | 48,702 | | Profiling |
+| A: paid | 39,048 | 14.7% (5,757 late) | Labelled population |
+| A: train (posted before Oct 1, 2019) | 26,522 | 15.3% | Stage 1 training |
+| A: test (posted Oct 1, 2019 onward) | 12,526 | 13.5% | Stage 1 evaluation |
+| A: replay (open) | 9,654 | No outcome | Demo only; never in any metric |
+| B: train and test | 2,466 | To be measured at 3 days | Stage 2; time-based split defined in the feature spec |
 
-Customers: 1,423.
+Splits are chronological, never random, and change only through an approved decision.
 
-## 7. Leakage rules
+## 10. Leakage and prediction-time rules
 
-1. No outcome column (`clear_date`, days late, label) is ever an input for its own invoice.
-2. History features for an invoice use only invoices **paid before that invoice's posting date**.
-3. The split is by time, never random.
-4. Open invoices never contribute to accuracy.
-5. Tests enforce rules 1 to 3 on every run.
+1. Clear date, days late and the label are never features for the same invoice.
+2. History uses only invoices paid before the stage's scoring time.
+3. No feature uses information unavailable at the stage's scoring time.
+4. The Disputed flag is never a model input.
+5. Primary evaluation uses a time-based split, never random.
+6. Open invoices are never in accuracy, precision, recall, PR-AUC or calibration calculations.
+7. Automated tests enforce rules 1 to 6 on every pipeline run.
 
-## 8. Confidentiality rules
+## 11. Confidentiality
 
-- Customer names never appear in the app, the deck, notebook outputs or logs.
-- No raw data in git.
+- Raw customer names never appear in the application, deck, notebook outputs or logs.
+- No raw or generated data in git.
+- Masked labels in every user-facing view.
+- Customer identifiers and invoice-level data are not shared beyond the approved demo audience and purpose.
 
-## 9. Decisions for G1
+## 12. G1 decisions
 
-- [ ] Grace period of 3 days (decided November 26)
-- [ ] Column roles in section 4
-- [ ] Quality rules in section 5, including dropping 131 invoices due before their invoice date
-- [ ] Time split at October 1, 2019
+- [x] Grace period of 3 calendar days (D-012, D-056)
+- [x] History groups 0 / 1-4 / 5+ (D-061)
+- [x] Two models: Stage 1 on Dataset A, Stage 2 on Dataset B (D-059)
+- [ ] Column roles in section 5, including Disputed as event source only
+- [ ] Quality rules in section 8, including dropping 131 invoices due before their invoice date
+- [ ] Chronological split at October 1, 2019 for Dataset A
+- [ ] Scoring times in section 4: posting date (Stage 1) and due date minus 10 calendar days (Stage 2)
+- [ ] Synthetic notes contract in section 6
 
 ## Change log
 
 | Date | Change |
 |---|---|
-| Nov 26, 2026 | v1 draft for G1 |
+| Nov 26, 2026 | v1: first draft |
+| Nov 26, 2026 | v1.1 (owner): feature eligibility, history coverage, prediction-time rules |
+| Nov 26, 2026 | v1.2: Stage 2 and notes added; Dataset B and C contracts; scoring times; history groups; calendar days |

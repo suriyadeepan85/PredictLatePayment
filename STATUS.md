@@ -3,7 +3,7 @@
 **Last checkpoint:** November 26, 2026 · **Due:** November 30, 2026 (finish by November 29)
 
 ## Current gate
-**G1: data contract.** Draft is in `docs/data_contract.md`, waiting for the owner's approval.
+**G1: data contract v1.2.** Draft in `docs/data_contract.md`; three G1 items approved, five waiting (section 12).
 
 ## Done
 - Spec v2 created; spec v1 restored and unchanged
