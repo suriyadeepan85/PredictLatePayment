@@ -1,6 +1,6 @@
 # Coordinator Agent Specification
 
-**Version:** 0.1 · **Date:** November 26, 2026 · **Methodology:** owner's Development Methodology Specification v1.0, section 5.2 · **Status:** PROPOSED (D-079)
+**Version:** 0.1 · **Date:** November 26, 2026 · **Methodology:** owner's Development Methodology Specification v1.0, section 5.2 · **Status:** PROPOSED. Needs the owner's approval: under methodology section 5, the coordinator spec is human-owned, because it sets the coordinator's own authority
 
 In the hackathon build, Claude does this job inside the chat session, with the owner approving at gates. In the full build, a dedicated Coordinator Agent runs it and hands tasks to the role agents in this folder.
 
@@ -39,6 +39,8 @@ Everything else is delegated: code structure, library choices, chart design, spe
 - Component specs use the 10 sections of methodology 5.3 (`specs/note_features.md` is the template).
 - Each spec says which sections are APPROVED and which are PROPOSED, and cites the record IDs behind them.
 - Rebuild rule (D-077): each spec must be detailed enough for a fresh session, with no chat history, to rebuild the component and reproduce its reported numbers.
+
+Before execution: a component or role spec is drafted by the coordinator; it can be built against only after the owner has approved its business-critical parts (section 3). Purely technical sections need no approval.
 
 ## 6. Task decomposition rules
 Each task brief (in `tasks/` in the full build; in the session task list during the hackathon) has: ID (T-###), agent, objective, inputs, outputs, spec references, dependencies, files it may change, tests, acceptance criteria and the evidence required. A task should be small enough to finish and verify in one session.
