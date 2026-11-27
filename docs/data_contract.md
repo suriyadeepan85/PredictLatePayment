@@ -1,7 +1,7 @@
-# Data Contract v1.2: Late Payment Prediction (Stage 1 and Stage 2)
+# Data Contract v1.3: Late Payment Prediction (Stage 1 and Stage 2)
 
 **Status:** draft for gate G1 review · **Date:** November 26, 2026 · **Owner:** Suriyadeepan Narayanasamy
-**Based on:** the owner's v1.1 (feature eligibility, history coverage, prediction-time rules), extended for the approved scope changes: note features and a second prediction 10 days before the due date (D-050, D-051, D-057, D-059).
+**Based on:** the owner's v1.1 (feature eligibility, history coverage, prediction-time rules), extended for the approved scope changes: note features and a second prediction 10 days before the due date (D-050, D-051, D-057, D-059). v1.3 adds the owner's November 26 voice-session decisions on Stage 2 inputs, notes and the IBM split (D-064 to D-068).
 
 This contract defines the data, the targets, the quality requirements and the rules for what may be used at prediction time. It does not select the final models or define application behaviour.
 
@@ -13,7 +13,7 @@ This contract defines the data, the targets, the quality requirements and the ru
 | Source | Kaggle `pradumn203/payment-date-prediction-for-invoices-dataset` | IBM sample `WA_Fn-UseC_-Accounts-Receivable.csv` |
 | Licence | CC BY-NC 4.0; internal demo only | None stated; internal demo only, pending organizer confirmation (Q-001) |
 | Size | 50,000 rows, 19 columns | 2,466 rows, 12 columns, 100 customers |
-| SHA-256 | `3409441a8ecc48438a0fd42421ce3230d95305f7afcefb732bf232a948b6cf88` | Recorded on first load |
+| SHA-256 | `3409441a8ecc48438a0fd42421ce3230d95305f7afcefb732bf232a948b6cf88` | `f5d488eaa4c1cc843b478b6f1068c553c5394aab4b64d587e4b9ad811d845c19` |
 | Storage | `data/raw/` only; never in git | `data/raw/` only; never in git |
 | Dataset C: synthetic notes | Generated from Dataset B (section 6); stored in `data/generated/`; never in git | |
 
@@ -23,7 +23,7 @@ Licence limits apply to development, demonstration and any distribution.
 
 - Dataset A: one row = one invoice, key `doc_id`, unique after cleaning.
 - Dataset B: one row = one invoice, key `invoiceNumber`, unique.
-- Dataset C: one row = one note, key `note_id`, linked to Dataset B by `invoiceNumber`.
+- Dataset C: one row = one note, key `note_id`, linked to Dataset B by `customerID` (required); `invoiceNumber` only when the note is about a specific invoice (D-065).
 
 ## 3. Targets and labels
 
@@ -38,9 +38,10 @@ Licence limits apply to development, demonstration and any distribution.
 | Stage | Dataset | Scoring time | Information allowed |
 |---|---|---|---|
 | Stage 1 | A | The invoice's posting date | Invoice fields; history from the customer's invoices **paid before the posting date** |
-| Stage 2 | B | **Due date minus 10 calendar days** | Stage 1 inputs, history from invoices **paid before the Stage 2 scoring date**, and signals from notes dated **on or before** the Stage 2 scoring date |
+| Stage 2 | B | **Due date minus 10 calendar days** | The same inputs as Stage 1, with history **frozen at the invoice date** (invoices paid before the invoice date), plus signals from notes dated **on or before** the Stage 2 scoring date. The notes are the only new information (D-064) |
 
 - No feature may use information unavailable at its stage's scoring time.
+- Stage 2 deliberately does not refresh history between the invoice date and the Stage 2 date, so any gain over Stage 1 comes from the notes alone (D-064).
 - Stage 2 applies only where the scoring date is on or after the invoice date. All Dataset B invoices have 30-day terms, so it always applies there.
 
 ## 5. Column roles
@@ -69,9 +70,9 @@ Roles: **input**, **history key** (finds eligible prior invoices; never a raw fe
 
 | Column | Type | Role | Rule |
 |---|---|---|---|
-| invoiceNumber | string | ID | Unique; join key for notes |
-| customerID | string | History key | Never a raw feature |
-| countryCode | category | Input / fairness group | Group-level evaluation reported here |
+| invoiceNumber | string | ID | Unique; optional link for invoice-specific notes |
+| customerID | string | History key | Never a raw feature; required link for notes |
+| countryCode | category | Input / fairness group | Group-level evaluation reported here (proposed, Q-013) |
 | InvoiceDate | date | Input | Invoice date |
 | DueDate | date | Input | Stage 2 scoring time = DueDate minus 10 days; target construction |
 | InvoiceAmount | numeric | Input | Must be above 0 |
@@ -80,26 +81,35 @@ Roles: **input**, **history key** (finds eligible prior invoices; never a raw fe
 | SettledDate, DaysToSettle, DaysLate | date / integer | Outcome | Label and eligible history only |
 | PaperlessDate | date | Dropped | Captured by PaperlessBill |
 
-## 6. Synthetic notes (Dataset C)
+## 6. Notes data rules (Dataset C, synthetic)
+
+Approved by the owner, November 26 (D-065, D-066, D-067). The notes simulate the free-text notes a receivables or service team keeps on a customer account. They are not automatic messages sent to the customer.
 
 | Column | Type | Rule |
 |---|---|---|
 | note_id | string | Unique |
-| invoiceNumber | string | Links to Dataset B |
-| customerID | string | Copied from Dataset B |
-| note_date | date | Between the invoice date and the Stage 2 scoring date |
+| customerID | string | Required; must exist in Dataset B |
+| invoiceNumber | string | Optional; filled only when the note is about a specific invoice, and must then exist in Dataset B for that customer |
+| topic | category | Invoice dispute, claim, missing PO, contact change, payment promise or general query. Set at generation; used to check the note reader, never a model input |
+| note_date | date | For an invoice note: between that invoice's date and its Stage 2 scoring date |
 | author_role | category | Customer service or receivables analyst |
 | channel | category | Call, email or portal |
 | note_text | string | Synthetic; contains no real names |
 
+**Which invoices get notes (D-066):**
+- Disputed = Yes: always a dispute thread linked to the invoice.
+- Disputed = No: 67% get no notes; 33% get a generic note (claim, missing PO, contact change, payment promise or general query).
+- One in five generic notes reads like a dispute (a query that was raised and resolved), so a dispute-sounding note does not always mean a flagged dispute.
+
 **Generation rules (blind generation):**
 1. Notes never create or change an outcome. Late or on time always comes from Dataset B.
 2. The generator sees only: invoiceNumber, customerID, InvoiceDate, DueDate, InvoiceAmount, PaperlessBill and Disputed. Outcome columns are removed in code before generation.
-3. Notes describe real events only: a disputed invoice gets a dispute thread; an undisputed one gets routine notes.
+3. Notes describe real events only, using the mix above.
 4. Realistic contradictions are added: resolved disputes, frustrated customers who pay on time, routine notes on invoices that end up late.
-5. The note reader (LLM extraction) is tested on Bitext's labelled requests, not on our own notes.
-6. Leakage alarm: if Stage 2 looks near-perfect, generation is checked for leaks. A modest gain over Stage 1 is expected.
-7. Every reported Stage 2 result is labelled as using synthetic notes anchored to real dispute events.
+5. The note reader (LLM extraction) is checked against the topic labels set at generation, and also on Bitext's labelled requests.
+6. When scoring an invoice, only that customer's notes dated on or before the invoice's Stage 2 scoring date are used.
+7. Leakage alarm: if Stage 2 looks near-perfect, generation is checked for leaks. A modest gain over Stage 1 is expected.
+8. Every reported Stage 2 result is labelled as using synthetic notes anchored to real dispute events.
 
 The extracted signals (for example open dispute, sentiment, promise to pay, contacts in the last 30 days) and the extraction prompt are defined in the note features spec, not here.
 
@@ -140,16 +150,17 @@ Applied in this order. Row counts affected by each rule are logged. Any rule mar
 
 ### Dataset B
 
-The same rules apply where the columns exist (Q2, Q4, Q5, Q7, Q9). Profiled so far: 2,466 unique invoices, no missing values, no settled date before the invoice date. Full counts are added when the Stage 2 pipeline is built.
+The same rules apply where the columns exist (Q2, Q4, Q5, Q7, Q9). Checked in `notebooks/03_ibm_split.ipynb`: 2,466 unique invoices, no missing values, no settled date before the invoice date, no amount at or below 0. Nothing is dropped.
 
 ### Dataset C
 
 | # | Rule | Action |
 |---|---|---|
-| N1 | Note linked to an invoice that doesn't exist | Fail |
-| N2 | Note dated after the Stage 2 scoring date or before the invoice date | Fail |
+| N1 | Note's customerID doesn't exist, or its invoiceNumber doesn't exist for that customer | Fail |
+| N2 | Invoice note dated after that invoice's Stage 2 scoring date or before its invoice date | Fail |
 | N3 | Generator input contains an outcome column | Fail |
 | N4 | Note text contains a real company or person name | Fail |
+| N5 | Generated mix differs from section 6 (every disputed invoice has a dispute thread; about 33% of undisputed invoices have a note) | Fail |
 
 ## 9. Dataset splits
 
@@ -160,9 +171,11 @@ The same rules apply where the columns exist (Q2, Q4, Q5, Q7, Q9). Profiled so f
 | A: train (posted before Oct 1, 2019) | 26,522 | 15.3% | Stage 1 training |
 | A: test (posted Oct 1, 2019 onward) | 12,526 | 13.5% | Stage 1 evaluation |
 | A: replay (open) | 9,654 | No outcome | Demo only; never in any metric |
-| B: train and test | 2,466 | To be measured at 3 days | Stage 2; time-based split defined in the feature spec |
+| B: all invoices | 2,466 | 28.4% | Labelled population |
+| B: train (invoice date before Jul 1, 2013) | 1,930 | 30.3% (585 late) | Stage 2 training |
+| B: test (invoice date Jul 1, 2013 onward) | 536 | 21.5% (115 late; 122 disputed) | Stage 2 evaluation |
 
-Splits are chronological, never random, and change only through an approved decision.
+Splits are chronological, never random, and change only through an approved decision (D-063, D-068). For Dataset B, scikit-learn `TimeSeriesSplit` (5 folds) is a second check that patterns hold over time: disputed invoices are late 44% to 66% of the time in every fold, undisputed 15% to 21% (`notebooks/03_ibm_split.ipynb`).
 
 ## 10. Leakage and prediction-time rules
 
@@ -187,9 +200,13 @@ Splits are chronological, never random, and change only through an approved deci
 - [x] History groups 0 / 1-4 / 5+ (D-061)
 - [x] Two models: Stage 1 on Dataset A, Stage 2 on Dataset B (D-059)
 - [x] Dataset A column roles, quality rules Q1 to Q13 and the October 1, 2019 split (D-063)
-- [ ] Dataset B column roles, including Disputed as event source only (under discussion)
+- [x] Stage 2 inputs: Stage 1 inputs with history frozen at the invoice date, plus note signals only (D-064)
+- [x] Notes data rules in section 6: customer-level link, topic, generation mix (D-065, D-066, D-067)
+- [x] Dataset B split at July 1, 2013 (D-068)
+- [ ] Dataset B column roles, including Disputed as event source only
 - [ ] Scoring times in section 4: posting date (Stage 1) and due date minus 10 calendar days (Stage 2)
-- [ ] Synthetic notes contract in section 6
+- [ ] IBM fairness group = countryCode (Q-013)
+- [ ] Stage-1-style comparison model on Dataset B (Q-012)
 
 ## Change log
 
@@ -198,3 +215,4 @@ Splits are chronological, never random, and change only through an approved deci
 | Nov 26, 2026 | v1: first draft |
 | Nov 26, 2026 | v1.1 (owner): feature eligibility, history coverage, prediction-time rules |
 | Nov 26, 2026 | v1.2: Stage 2 and notes added; Dataset B and C contracts; scoring times; history groups; calendar days |
+| Nov 26, 2026 | v1.3 (owner-approved changes from the voice session): Stage 2 history frozen at invoice date; notes linked by customer with topic and generation mix; section 6 renamed Notes data rules; N5 added; IBM SHA, quality check results and split counts |

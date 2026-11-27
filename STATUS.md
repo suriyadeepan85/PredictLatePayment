@@ -3,17 +3,19 @@
 **Last checkpoint:** November 26, 2026 · **Due:** November 30, 2026 (finish by November 29)
 
 ## Current gate
-**G1: data contract v1.2.** Draft in `docs/data_contract.md`; three G1 items approved, five waiting (section 12).
+**G1: data contract v1.3.** Draft in `docs/data_contract.md`; seven G1 items approved, four waiting (section 12).
 
 ## Done
 - Spec v2 created; spec v1 restored and unchanged
 - Repo connected; push works
 - Customer Invoices data profiled (`notebooks/01_profile_data.ipynb`, charts in `docs/img/`)
-- Data contract v1 drafted
+- Data contract v1.3: Stage 2 inputs, notes data rules and IBM split approved (D-064 to D-068)
+- IBM split notebook with scikit-learn TimeSeriesSplit (`notebooks/03_ibm_split.ipynb`, chart `docs/img/ibm_split.png`)
+- History profile (`notebooks/02_history_profile.ipynb`)
 - Methodology set up: `CLAUDE.md`, `DECISIONS.md`, `OPEN_ITEMS.md`, `STATUS.md`, `specs/methodology.md`
 
 ## Waiting for the owner
-1. Approve the data contract (G1), or list changes
+1. Remaining G1 items: Dataset B column roles (Disputed as event source only), scoring times, Q-012 (comparison model on IBM), Q-013 (countryCode as IBM fairness group)
 2. Confirm or change the seeded records in `DECISIONS.md` (all PROPOSED except D-007)
 3. Answer Q-001 and Q-002 in `OPEN_ITEMS.md`
 
