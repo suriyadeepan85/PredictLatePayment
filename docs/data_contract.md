@@ -186,9 +186,8 @@ Splits are chronological, never random, and change only through an approved deci
 - [x] Grace period of 3 calendar days (D-012, D-056)
 - [x] History groups 0 / 1-4 / 5+ (D-061)
 - [x] Two models: Stage 1 on Dataset A, Stage 2 on Dataset B (D-059)
-- [ ] Column roles in section 5, including Disputed as event source only
-- [ ] Quality rules in section 8, including dropping 131 invoices due before their invoice date
-- [ ] Chronological split at October 1, 2019 for Dataset A
+- [x] Dataset A column roles, quality rules Q1 to Q13 and the October 1, 2019 split (D-063)
+- [ ] Dataset B column roles, including Disputed as event source only (under discussion)
 - [ ] Scoring times in section 4: posting date (Stage 1) and due date minus 10 calendar days (Stage 2)
 - [ ] Synthetic notes contract in section 6
 
