@@ -17,8 +17,9 @@ Format and rules: `specs/methodology.md`. Seeded November 26, 2026.
 | Q-009 | Is the 3-day grace period counted in calendar days or business days? | RESOLVED (D-056) | Owner | G1 |
 | Q-010 | Minimum number of prior paid invoices for "sufficient" history; to be set from profiling | RESOLVED (D-061) | Claude to profile, owner to approve | G1 / G2 |
 | Q-011 | Data contract v1.1 (owner's draft): adopt it, and extend it for notes and the 10-day scoring time? | RESOLVED (D-057) | Owner | G1 |
-| Q-012 | Also train a Stage-1-style model on IBM (no notes), so the Stage 2 gain from notes is measured on the same data? Claude recommends yes: without it, Stage 2 versus Stage 1 compares two different datasets | OPEN | Owner | G1 |
-| Q-013 | Use countryCode as the IBM fairness group (5 codes, 387 to 616 invoices each, late rates 18% to 36%)? Proposed by Claude | OPEN | Owner | G1 |
+| Q-012 | Also train a Stage-1-style model on IBM (no notes), so the Stage 2 gain from notes is measured on the same data? Claude recommends yes: without it, Stage 2 versus Stage 1 compares two different datasets | RESOLVED (D-071) | Owner | G1 |
+| Q-013 | Use countryCode as the IBM fairness group (5 codes, 387 to 616 invoices each, late rates 18% to 36%)? Proposed by Claude | RESOLVED (D-072) | Owner | G1 |
+| Q-014 | Move the system spec (Claude Doc "Late Payment Prototype v2") into the repo as `SYSTEM_SPEC.md`, so the repo is the single source for a rebuild? The Doc can remain the pitch narrative. Claude recommends yes | OPEN | Owner | G2 |
 
 ## Assumptions
 

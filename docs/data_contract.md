@@ -1,6 +1,6 @@
-# Data Contract v1.3: Late Payment Prediction (Stage 1 and Stage 2)
+# Data Contract v1.4: Late Payment Prediction (Stage 1 and Stage 2)
 
-**Status:** draft for gate G1 review · **Date:** November 26, 2026 · **Owner:** Suriyadeepan Narayanasamy
+**Status:** APPROVED, gate G1 closed (D-075) · **Date:** November 26, 2026 · **Owner:** Suriyadeepan Narayanasamy
 **Based on:** the owner's v1.1 (feature eligibility, history coverage, prediction-time rules), extended for the approved scope changes: note features and a second prediction 10 days before the due date (D-050, D-051, D-057, D-059). v1.3 adds the owner's November 26 voice-session decisions on Stage 2 inputs, notes and the IBM split (D-064 to D-068).
 
 This contract defines the data, the targets, the quality requirements and the rules for what may be used at prediction time. It does not select the final models or define application behaviour.
@@ -72,7 +72,7 @@ Roles: **input**, **history key** (finds eligible prior invoices; never a raw fe
 |---|---|---|---|
 | invoiceNumber | string | ID | Unique; optional link for invoice-specific notes |
 | customerID | string | History key | Never a raw feature; required link for notes |
-| countryCode | category | Input / fairness group | Group-level evaluation reported here (proposed, Q-013) |
+| countryCode | category | Input / fairness group | Group-level evaluation reported here (D-072) |
 | InvoiceDate | date | Input | Invoice date |
 | DueDate | date | Input | Stage 2 scoring time = DueDate minus 10 days; target construction |
 | InvoiceAmount | numeric | Input | Must be above 0 |
@@ -111,7 +111,7 @@ Approved by the owner, November 26 (D-065, D-066, D-067). The notes simulate the
 7. Leakage alarm: if Stage 2 looks near-perfect, generation is checked for leaks. A modest gain over Stage 1 is expected.
 8. Every reported Stage 2 result is labelled as using synthetic notes anchored to real dispute events.
 
-The extracted signals (for example open dispute, sentiment, promise to pay, contacts in the last 30 days) and the extraction prompt are defined in the note features spec, not here.
+The extracted signals (D-074) and the extraction prompt are defined in `specs/note_features.md`, not here.
 
 ## 7. Customer history
 
@@ -182,7 +182,7 @@ Splits are chronological, never random, and change only through an approved deci
 1. Clear date, days late and the label are never features for the same invoice.
 2. History uses only invoices paid before the stage's scoring time.
 3. No feature uses information unavailable at the stage's scoring time.
-4. The Disputed flag is never a model input.
+4. The Disputed flag is never an input to a deployed model; its only input use is the evaluation-only ceiling model (D-073).
 5. Primary evaluation uses a time-based split, never random.
 6. Open invoices are never in accuracy, precision, recall, PR-AUC or calibration calculations.
 7. Automated tests enforce rules 1 to 6 on every pipeline run.
@@ -203,10 +203,10 @@ Splits are chronological, never random, and change only through an approved deci
 - [x] Stage 2 inputs: Stage 1 inputs with history frozen at the invoice date, plus note signals only (D-064)
 - [x] Notes data rules in section 6: customer-level link, topic, generation mix (D-065, D-066, D-067)
 - [x] Dataset B split at July 1, 2013 (D-068)
-- [ ] Dataset B column roles, including Disputed as event source only
-- [ ] Scoring times in section 4: posting date (Stage 1) and due date minus 10 calendar days (Stage 2)
-- [ ] IBM fairness group = countryCode (Q-013)
-- [ ] Stage-1-style comparison model on Dataset B (Q-012)
+- [x] Dataset B column roles, including Disputed as event source only (D-062, D-070)
+- [x] Scoring times in section 4: posting date (Stage 1) and due date minus 10 calendar days (Stage 2) (D-062)
+- [x] IBM fairness group = countryCode (D-072)
+- [x] Comparison models on Dataset B, evaluation only: Model A without notes (D-071) and a ceiling model with the Disputed flag as a direct input (D-073). The ceiling model is the only permitted use of Disputed as an input, it is never deployed, and it is always labelled as a ceiling
 
 ## Change log
 
@@ -216,3 +216,4 @@ Splits are chronological, never random, and change only through an approved deci
 | Nov 26, 2026 | v1.1 (owner): feature eligibility, history coverage, prediction-time rules |
 | Nov 26, 2026 | v1.2: Stage 2 and notes added; Dataset B and C contracts; scoring times; history groups; calendar days |
 | Nov 26, 2026 | v1.3 (owner-approved changes from the voice session): Stage 2 history frozen at invoice date; notes linked by customer with topic and generation mix; section 6 renamed Notes data rules; N5 added; IBM SHA, quality check results and split counts |
+| Nov 26, 2026 | v1.4: G1 closed. Dataset B roles, scoring times, countryCode fairness group approved; Model A and ceiling model added as evaluation-only comparisons; leakage rule 4 clarified |
