@@ -26,8 +26,8 @@
 3. Answer Q-001 and Q-002 in `OPEN_ITEMS.md`
 
 ## Next
-2. Train the baseline and XGBoost; evaluation and fairness check; reviewer pass (G3)
-3. Streamlit app (Day 2), then demo and deck (Day 3)
+1. Train the baseline and XGBoost; evaluation and fairness check; reviewer pass (G3)
+2. Streamlit app (Day 2), then demo and deck (Day 3)
 
 ## Plan
 | Day | Focus | State |
