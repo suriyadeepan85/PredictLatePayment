@@ -59,3 +59,14 @@ Seeded on November 26, 2026 from the planning conversation (November 13 to 26). 
 | D-045 | observation | 861 of 1,423 customers have fewer than 5 invoices; 99% of open invoices' customers have paid history | PROPOSED | Claude | Notebook sections 5 and 7 |
 | D-046 | observation | The dataset has no grace-period or reminder field | PROPOSED | Claude | `docs/data_contract.md` section 3 |
 | D-047 | observation | After cleaning: 48,702 invoices; train 26,522 (15.3% late), test 12,526 (13.5% late), replay 9,654 | PROPOSED | Claude | `docs/data_contract.md` section 6 |
+
+## Added November 26, 2026 (voice session, written up in text)
+
+| ID | Type | Statement | Status | By | Evidence |
+|---|---|---|---|---|---|
+| D-050 | decision | Bring the LLM note features back into scope: synthetic interaction notes, an LLM extracts signals, signals become model features. Reverses D-004 | PROPOSED | Owner | Owner, Nov 26 (voice): "you want the note features back in scope" |
+| D-051 | decision | Two predictions: on the invoice date (Stage 1) and 10 days before the due date (Stage 2, using notes) | PROPOSED | Owner | Owner, Nov 26 (voice): "prediction on invoice day and prediction on 10th day before due date" |
+| D-052 | decision | Nothing is dropped from scope. Build order: model and core screens, then note features and Stage 2, then outreach draft, business impact page and IBM setup page | PROPOSED | Owner | Owner, Nov 26 (voice): "I don't want to drop anything" |
+| D-053 | decision | Every approved decision is turned into the specs used for detailed development | PROPOSED | Owner | Owner, Nov 26 (voice) |
+| D-054 | decision | Change requests (CRs) govern spec changes in the full build; the hackathon build uses direct owner approval | PROPOSED | Owner | Owner, Nov 26 (voice): "use CR for any changes" |
+| D-055 | decision | Component specs for the hackathon: data contract, feature list, note features, evaluation and fairness, app screens, demo script. Role specs (coordinator, ML, LLM, app, DevOps, reviewer) come with the full build | PROPOSED | Claude | Voice session, Nov 26 |
