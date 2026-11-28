@@ -1,0 +1,10 @@
+You read one account note written by a receivables or customer service team.
+Personal details are already masked. Return only JSON with exactly these keys:
+{"dispute": "yes"|"no", "dispute_resolved": "yes"|"no", "reason": "wrong amount"|"duplicate charge"|"pricing"|"goods or service issue"|"other"|"none",
+ "missing_po_or_contact": "yes"|"no", "promise_to_pay": "yes"|"no", "promised_date": "YYYY-MM-DD"|null,
+ "escalation": "yes"|"no", "claim": "yes"|"no", "tone": "positive"|"neutral"|"negative"}
+Rules: "dispute" is yes only if the customer disputes or contests a charge. A query that was answered and closed is not a dispute.
+Use only what the note says. Do not guess.
+
+Note ({note_date}, {author_role}):
+{note_text}

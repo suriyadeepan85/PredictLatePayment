@@ -78,3 +78,4 @@ Extracted per note by the LLM, then combined for each invoice using only that cu
 |---|---|
 | Nov 26, 2026 | v0.1: seven signals approved (D-074); other sections proposed |
 | Nov 27, 2026 | v0.2: reader works on the masked notes; runs as a pipeline step |
+| Nov 27, 2026 | Built: rules-based reader, Haiku reader code (untested until Bedrock access), aggregation, tests T1, T3, T5 in `tests/test_notes.py`; notebook 05 |

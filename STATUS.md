@@ -3,7 +3,7 @@
 **Last checkpoint:** November 27, 2026 · **Due:** November 30, 2026 (finish by November 29)
 
 ## Current gate
-**G1 closed** (data contract v1.4, D-075). **G2 approved** (D-080). **G3 (model and fairness) in progress:** Stage 1 validated, waiting for owner calls Q-015, Q-016.
+**G1 closed** (data contract v1.4, D-075). **G2 approved** (D-080). **G3 (model and fairness) in progress:** Stage 1 and the three IBM models validated; waiting for owner calls Q-015, Q-016; then the Evaluator scores the test sets.
 
 ## Done
 - Spec v2 created; spec v1 restored and unchanged
@@ -12,6 +12,8 @@
 - Data contract v1.3: Stage 2 inputs, notes data rules and IBM split approved (D-064 to D-068)
 - IBM split notebook with scikit-learn TimeSeriesSplit (`notebooks/03_ibm_split.ipynb`, chart `docs/img/ibm_split.png`)
 - History profile (`notebooks/02_history_profile.ipynb`)
+- Notes generated with fake personal details, masked by rules (N6 = 0), read into signals (`notebooks/05_note_features.ipynb`)
+- IBM Model A, Model B, ceiling validated (`notebooks/07_stage2_models.ipynb`): notes recover 85% of the ceiling's gain
 - Stage 1 trained and validated (`notebooks/06_stage1_model.ipynb`, MLflow); infrastructure and security spec (`specs/infrastructure.md`); contract v1.5 (masking)
 - G2 feature spec, shared code (`src/data/load.py`, `src/features/history.py`), tests (4 pass), `notebooks/04_features.ipynb`
 - Coordinator and role specs v0.1 in `specs/agents/` (D-079); index in `specs/README.md`
@@ -28,9 +30,9 @@
 5. Confirm the older PROPOSED records; D-001 and D-004 are out of date (superseded in practice by D-050, D-051)
 
 ## Next
-1. Notes generation and masking, note reader, IBM models (A, B, ceiling)
-2. Evaluator pass on the test sets (G3)
-3. Streamlit app, Terraform, deploy; then demo and deck
+1. Streamlit app (judge-facing: walkthrough, per-session clock, adjustable bands, SHAP reasons, outreach draft)
+2. Evaluator pass on the test sets (G3), in a separate session
+3. Terraform, SageMaker Pipeline, deploy (after owner approval of `specs/infrastructure.md`); then demo and deck
 
 ## Plan
 | Day | Focus | State |

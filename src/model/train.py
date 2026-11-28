@@ -92,7 +92,8 @@ def fit_predict(kind, tr, va, numeric=NUMERIC_STAGE1, categorical=CATEGORICAL_ST
     raise ValueError(kind)
 
 
-def rolling_validation(train_df, n_splits=5, kinds=("baseline", "logistic", "xgboost")):
+def rolling_validation(train_df, n_splits=5, kinds=("baseline", "logistic", "xgboost"),
+                       numeric=NUMERIC_STAGE1, categorical=CATEGORICAL_STAGE1, label=None):
     """TimeSeriesSplit inside the training period. Each fold trains only on invoices paid
     before the fold's first validation invoice date."""
     d = train_df.sort_values("invoice_date").reset_index(drop=True)
@@ -102,11 +103,11 @@ def rolling_validation(train_df, n_splits=5, kinds=("baseline", "logistic", "xgb
         cut = va["invoice_date"].min()
         tr = known_by(d.iloc[tr_i], cut)
         for kind in kinds:
-            _, s, _ = fit_predict(kind, tr, va)
-            rows.append({"fold": k, "model": kind, "train_n": len(tr), "valid_n": len(va),
+            _, s, _ = fit_predict(kind, tr, va, numeric, categorical)
+            rows.append({"fold": k, "model": kind, "inputs": label, "train_n": len(tr), "valid_n": len(va),
                          "valid_from": cut.date(), **metrics(va["late"], s)})
             if k == n_splits:
-                preds.append(pd.Series(s, index=va.index, name=kind))
+                preds.append(pd.Series(s, index=va.index, name=f"{label}_{kind}" if label else kind))
     last_valid = d.iloc[va_i].join(pd.concat(preds, axis=1))
     return pd.DataFrame(rows), last_valid
 
@@ -126,3 +127,27 @@ def group_rates(df, score_col, group_col, flag_share=0.2):
     out.loc["ALL"] = overall
     out["false_alarm_ratio"] = out["false_alarm_rate"] / overall["false_alarm_rate"]
     return out
+
+
+# ---- Dataset B (IBM): Model A, Model B (Stage 2), ceiling (D-064, D-071, D-073; specs/features.md) ----
+HIST_NUMERIC = ["hist_n_paid", "hist_late_share", "hist_avg_days_late", "hist_days_since_last_late",
+                "hist_std_days_late", "hist_last_late"]
+IBM_INPUTS = {
+    "model_a": (["log_amount", "paperless"] + HIST_NUMERIC, ["country_code", "hist_group"]),
+}
+
+
+def ibm_inputs():
+    from src.features.notes import SIGNAL_NUMERIC, SIGNAL_CATEGORICAL
+    num_a, cat_a = IBM_INPUTS["model_a"]
+    return {"model_a": (num_a, cat_a),
+            "model_b": (num_a + SIGNAL_NUMERIC, cat_a + SIGNAL_CATEGORICAL),
+            "ceiling": (num_a + ["disputed"], cat_a)}
+
+
+def ibm_frame(b, note_features):
+    """IBM invoices with Stage 1-style inputs (history frozen at the invoice date) plus note signals."""
+    df = b.copy()
+    df["log_amount"] = np.log1p(df["amount"])
+    df = df.join(build_history(df, asof_col="invoice_date"))
+    return df.merge(note_features, on="invoice_id", how="left")

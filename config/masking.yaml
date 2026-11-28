@@ -1,0 +1,19 @@
+# Rules-based masking of personal details in note text (data contract section 6, D-088).
+# A client adds its own patterns here; no code change needed. Order matters: first match wins.
+patterns:
+  - name: email
+    regex: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
+    replace: '[EMAIL]'
+  - name: phone
+    # Separators required, so business keys such as 10-digit invoice numbers are not masked.
+    regex: '(?:\+?1[-. ])?(?:\(?\d{3}\)?[-. ])?\b\d{3}[-. ]\d{4}\b'
+    replace: '[PHONE]'
+  - name: reference
+    regex: '\b(?:REF|CASE|TKT)-?\d{4,}\b'
+    replace: '[REF]'
+names:
+  # Names come from each customer's contact list (the CRM at a client).
+  # Each name becomes a one-way stand-in "Contact NNN" from a salted hash; no lookup table is kept.
+  label: 'Contact {:03d}'
+  salt_env: LPP_MASK_SALT        # set in the environment; the default below is for the demo only
+  default_salt: 'demo-salt-not-secret'
