@@ -14,7 +14,7 @@
 - History profile (`notebooks/02_history_profile.ipynb`)
 - Independent review done (`reports/review_2026-11-27.md`); technical fixes applied (D-099): calibrated probabilities, hardened masking, 32 tests
 - Notes generated with fake personal details, masked by rules (N6 = 0), read into signals (`notebooks/05_note_features.ipynb`)
-- Stage 2 rebuilt under D-103 and D-104: what-if curve of the notes' gain (`docs/img/stage2_notes_curve.png`, D-110)
+- Stage 2 rebuilt under D-103 and D-104, reviewed twice; what-if curve (`docs/img/stage2_notes_curve.png`, D-112); 36 tests
 - Stage 1 trained and validated (`notebooks/06_stage1_model.ipynb`, MLflow); infrastructure and security spec (`specs/infrastructure.md`); contract v1.5 (masking)
 - G2 feature spec, shared code (`src/data/load.py`, `src/features/history.py`), tests (4 pass), `notebooks/04_features.ipynb`
 - Coordinator and role specs v0.1 in `specs/agents/` (D-079); index in `specs/README.md`
@@ -27,6 +27,7 @@
 2. Approve the coordinator spec (human-owned, `specs/agents/coordinator.md` section 3)
 3. Q-001: organizers' approval of the personal AWS and Claude accounts
 4. Q-014: copy the system spec into the repo (recommended)
+5. D-109 (routine notes on every invoice) and Q-020 (fairness rule at high late rates)
 
 ## Next
 1. Streamlit app (judge-facing: walkthrough, per-session clock, adjustable bands, SHAP reasons, outreach draft)

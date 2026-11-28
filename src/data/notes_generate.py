@@ -26,6 +26,7 @@ REASONS = {
 OPENERS = ["Customer is disputing invoice {inv} ({amt}){why}.", "Customer won't pay {inv} ({amt}) for now{why}.",
            "Call about {inv}: customer is contesting the charge{why}.", "AP team pushed back on {inv} ({amt}){why}.",
            "Customer has put {inv} on hold{why}.", "Customer challenged invoice {inv}{why}."]
+NOTE_COUNT_P = [0.5, 0.3, 0.2]      # notes per dispute thread and per routine burst (1, 2 or 3)
 GENERIC_TOPICS = ["claim", "missing PO", "contact change", "payment promise", "general query"]
 
 
@@ -99,20 +100,24 @@ def generate_notes(invoices, seed=42, generic_share=0.33, dispute_like_share=0.2
             d0 = _date_between(lo, hi, rng)
             add(r, d0, "invoice dispute", rng.choice(OPENERS).format(inv=r.invoice_id, amt=amt, why=why))
             d, cutoff_thread = d0, hi
-            for _ in range(rng.integers(0, 3)):
+            # Thread length 1 to 3 notes, same distribution as routine notes, so note count alone
+            # gives away less (review S2-03).
+            for _ in range(int(rng.choice([1, 2, 3], p=NOTE_COUNT_P)) - 1):
                 d = _date_between(d, cutoff_thread, rng)
-                add(r, d, "invoice dispute", rng.choice([
-                    f"Follow-up on the disputed invoice {r.invoice_id}; customer still waiting for our review.",
-                    f"Sent supporting documents for {r.invoice_id}; customer has not confirmed yet.",
-                    f"Customer frustrated about the delay resolving {r.invoice_id}."]))
-            if rng.random() < 0.3:
-                d = _date_between(d, cutoff_thread, rng)
-                add(r, d, "invoice dispute", rng.choice([f"Customer asked to escalate the dispute on {r.invoice_id} to a manager.",
-                                                         f"Customer wants a manager to review {r.invoice_id}."]))
-            if rng.random() < 0.25:                      # realistic contradiction: resolved disputes
-                d = _date_between(d, cutoff_thread, rng)
-                add(r, d, "invoice dispute", f"Dispute on {r.invoice_id} resolved; customer accepted the explanation and will pay as normal.")
-        if rng.random() < generic_share:                 # routine notes on any invoice, disputed or not (D-109)
+                kind = rng.choice(["follow-up", "escalation", "resolved"], p=[0.6, 0.2, 0.2])
+                if kind == "follow-up":
+                    add(r, d, "invoice dispute", rng.choice([
+                        f"Follow-up on the disputed invoice {r.invoice_id}; customer still waiting for our review.",
+                        f"Sent supporting documents for {r.invoice_id}; customer has not confirmed yet.",
+                        f"Customer frustrated about the delay resolving {r.invoice_id}."]))
+                elif kind == "escalation":
+                    add(r, d, "invoice dispute", rng.choice([f"Customer asked to escalate the dispute on {r.invoice_id} to a manager.",
+                                                             f"Customer wants a manager to review {r.invoice_id}."]))
+                else:                                    # realistic contradiction: resolved disputes
+                    add(r, d, "invoice dispute", f"Dispute on {r.invoice_id} resolved; customer accepted the explanation and will pay as normal.")
+                    break
+        n_routine = int(rng.choice([1, 2, 3], p=NOTE_COUNT_P)) if rng.random() < generic_share else 0
+        for _ in range(n_routine):                       # routine notes on any invoice, disputed or not (D-109)
             d = _date_between(start, cutoff, rng)
             if rng.random() < dispute_like_share:        # dispute-like but not a flagged dispute
                 add(r, d, "general query", f"Customer queried the amount on {r.invoice_id}; explained the charges and the query is resolved.")

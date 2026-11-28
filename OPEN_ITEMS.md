@@ -25,6 +25,7 @@ Format and rules: `specs/methodology.md`. Seeded November 26, 2026.
 | Q-017 | Decision A: Stage 2 scores only invoices still unpaid on the Stage 2 date (review R-02)? Changes approved contract section 4. Claude recommends yes | RESOLVED (D-103) | Owner | G3 |
 | Q-018 | Decision B: make the Stage 2 claim honest (review R-01): varied note wording with no fixed reason line, a share of disputes noted only after the Stage 2 date, and report a curve of the notes' gain against the share of disputes noted by day −10 instead of one number? Amends approved D-066. Claude recommends yes | RESOLVED (D-104) | Owner | G3 |
 | Q-019 | Mark D-001 and D-004 SUPERSEDED by D-050 and D-051 (review R-12)? Only the owner can | RESOLVED (D-001, D-004 superseded) | Owner | Governance |
+| Q-020 | D-102's second condition (flag rate above 1.25 times the group's own late rate) almost never triggers when the late rate is high and only 20% are flagged (IBM Stage 2: 43% late), so country 406 at 3.2 times the overall false-alarm rate passes. Keep as is, or compare the group's share of flags with its share of late invoices instead? Claude recommends the share comparison | OPEN | Owner | G3 |
 
 ## Assumptions
 

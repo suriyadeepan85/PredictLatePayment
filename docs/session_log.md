@@ -31,4 +31,4 @@ A short, dated summary of each working session (D-106). It gives a fresh session
 - Owner asked how the reviewer runs per task and how context is handled; written as D-108 (task briefs, handoff reports, risk-based review frequency; `tasks/TEMPLATE.md`).
 - Stage 2 rebuilt: only invoices unpaid on the Stage 2 date; varied note wording; 30% of disputes noted late; routine notes on every invoice (found and removed an artifact, D-109); what-if curve averaged over 3 note generations (D-110).
 - Waiting: D-109 approval (contract section 6 wording), infrastructure spec, coordinator spec, Q-001.
-
+- Second review (Stage 2 only): R-01 and R-02 confirmed fixed; note count still hinted at disputes, cold-start fold dragged averages, specs lagged code. Fixed in D-111; results D-112. New question Q-020 on the fairness rule.

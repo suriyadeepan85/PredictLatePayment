@@ -64,9 +64,11 @@ feats.to_csv("../data/generated/note_features.csv", index=False)
 fb = b.merge(feats, on="invoice_id")
 print("Invoices:", len(fb), "| with an invoice-linked note by the Stage 2 date:", int(fb["has_invoice_note"].sum()))
 d = fb[fb["disputed"] == 1]
-print(f"T2 (invoice level): disputed invoices with a dispute signal by the Stage 2 date: {(d['s1_reason'] != 'none').mean():.3f}; "
-      f"still open: {(d['s1_open_dispute'] == 1).mean():.3f} (the rest were resolved in the notes)")
-print(f"T2 (invoice level): undisputed invoices with an open-dispute signal: {(fb.loc[fb['disputed'] == 0, 's1_open_dispute'] == 1).mean():.3f}")
+vis = d[d["has_invoice_note"] == 1]
+print(f"T2 (invoice level): disputed invoices with any note by the Stage 2 date: {len(vis)} of {len(d)} "
+      f"(the rest were logged late by design); of those, read as a dispute: {(vis['dx_any_dispute_read'] == 1).mean():.3f}, still open: {(vis['s1_open_dispute'] == 1).mean():.3f}")
+u = fb[(fb["disputed"] == 0) & (fb["has_invoice_note"] == 1)]
+print(f"T2 (invoice level): undisputed invoices with a note that are read as a dispute: {(u['dx_any_dispute_read'] == 1).mean():.3f}")
 fb[SIGNAL_NUMERIC].describe().T[["count", "mean", "min", "max"]].round(2)"""),
 md("""## 6. How the signals relate to lateness (training period only)"""),
 code("""tr = fb[fb["set"] == "train"].copy()

@@ -107,6 +107,7 @@ def aggregate(notes, signals, invoices):
         if has_iv:
             d = iv[iv["dispute"] == "yes"]
             f["s1_open_dispute"] = yn(len(d) > 0 and d.iloc[-1]["dispute_resolved"] == "no")
+            f["dx_any_dispute_read"] = yn(len(d) > 0)          # diagnostic only, not a model input
             reasons = d[d["reason"] != "none"]["reason"]
             f["s1_reason"] = reasons.iloc[0] if len(reasons) else "none"
             pr = iv[iv["promise_to_pay"] == "yes"]
@@ -115,7 +116,7 @@ def aggregate(notes, signals, invoices):
                                            if len(pr) else np.nan)
             f["s4_escalation"] = yn((iv["escalation"] == "yes").any())
         else:
-            f.update({"s1_open_dispute": np.nan, "s1_reason": "no_note", "s3_promise": np.nan,
+            f.update({"s1_open_dispute": np.nan, "dx_any_dispute_read": np.nan, "s1_reason": "no_note", "s3_promise": np.nan,
                       "s3_days_promise_vs_due": np.nan, "s4_escalation": np.nan})
         window = cu[cu["note_date"] >= r.invoice_date] if has_cu else None
         po = (has_iv and (iv["missing_po_or_contact"] == "yes").any()) or \

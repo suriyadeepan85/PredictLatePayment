@@ -91,7 +91,7 @@ Approved by the owner, November 26 (D-065, D-066, D-067). The notes simulate the
 | customerID | string | Required; must exist in Dataset B |
 | invoiceNumber | string | Optional; filled only when the note is about a specific invoice, and must then exist in Dataset B for that customer |
 | topic | category | Invoice dispute, claim, missing PO, contact change, payment promise or general query. Set at generation; used to check the note reader, never a model input |
-| note_date | date | For an invoice note: between that invoice's date and its Stage 2 scoring date |
+| note_date | date | For an invoice note: between that invoice's date and its due date. Only notes dated on or before the Stage 2 date are used for scoring; dispute notes logged after it are invisible by design (D-104) |
 | author_role | category | Customer service or receivables analyst |
 | channel | category | Call, email or portal |
 | note_text | string | Synthetic; no real names. The raw file contains obviously fake personal details (D-088); the masked file does not |
@@ -230,3 +230,4 @@ Splits are chronological, never random, and change only through an approved deci
 | Nov 26, 2026 | v1.4: G1 closed. Dataset B roles, scoring times, countryCode fairness group approved; Model A and ceiling model added as evaluation-only comparisons; leakage rule 4 clarified |
 | Nov 27, 2026 | v1.5: fake personal details in generated notes, rules-based one-way masking, raw and masked files, rule N6 (D-088) |
 | Nov 27, 2026 | v1.6 (owner-approved): Stage 2 population is invoices unpaid on the Stage 2 date (D-103); honest note generation with 30% late-noted disputes (D-104); N2 widened; masking protects keys and known values; Q12 counted on training rows only (D-099) |
+| Nov 28, 2026 | v1.6.1: note_date rule aligned with D-104 (late-logged disputes dated up to the due date) |

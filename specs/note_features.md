@@ -42,7 +42,11 @@ Extracted per note by the LLM, then combined for each invoice using only that cu
 6. For offline development, a rules-based reader with the same output format can stand in for the LLM.
 
 ## 4b. Note generator settings (for a rebuild)
-`src/data/notes_generate.py`, `generate_notes(invoices, seed=42, generic_share=0.33, dispute_like_share=0.2)`: 1 to 3 fake contacts per customer; dispute thread = opening note, 0 to 2 follow-ups, escalation with probability 0.3, resolution with probability 0.25; personal details appended with probabilities 0.7 (name), 0.3 (email), 0.2 (phone), 0.3 (case reference). Generic topics are equally likely. Under review: decision B (D-099).
+`src/data/notes_generate.py`, `generate_notes(invoices, seed=42, generic_share=0.33, dispute_like_share=0.2, late_noted_share=0.3, reason_stated_share=0.7)`:
+- 1 to 3 fake contacts per customer.
+- Dispute thread (every disputed invoice): an opener from six varied wordings; the reason stated in natural words in 70% of threads; then 0 to 2 more notes (thread length 1, 2 or 3 with probabilities 0.5, 0.3, 0.2), each a follow-up (0.6), escalation (0.2) or resolution (0.2, ends the thread). In 30% of threads all notes fall after the Stage 2 date, up to the due date (D-104).
+- Routine notes (any invoice, disputed or not, D-109): with probability 0.33, a burst of 1, 2 or 3 notes (same probabilities); each is dispute-like but resolved with probability 0.2, otherwise a claim, missing PO, contact change, payment promise or general query (equally likely). Two general-query wordings look like disputes ("on hold", "pushed back") to test the reader.
+- Personal details appended with probabilities 0.7 (name), 0.3 (email), 0.2 (phone), 0.3 (case reference).
 
 ## 5. Interface (PROPOSED)
 - `src/features/notes.py`: `extract(notes_df, reader="rules"|"llm") -> signals_df` (one row per note) and `aggregate(notes_df, signals_df, invoices_df) -> features_df` (one row per invoice; columns and encodings in `specs/features.md`, "Note signal encodings").
@@ -83,3 +87,4 @@ Extracted per note by the LLM, then combined for each invoice using only that cu
 | Nov 27, 2026 | v0.2: reader works on the masked notes; runs as a pipeline step |
 | Nov 27, 2026 | Built: rules-based reader, Haiku reader code (untested until Bedrock access), aggregation, tests T1, T3, T5 in `tests/test_notes.py`; notebook 05 |
 | Nov 27, 2026 | v0.3 after the independent review: interface and outputs match the code (R-13); generator settings written out (R-06); T2 measured at invoice level; T4 and T5 automated (R-07) |
+| Nov 28, 2026 | v0.4 after the Stage 2 review: generator settings updated (late-noted disputes, varied wording, thread and routine counts); diagnostic column `dx_any_dispute_read` (not a model input) |
