@@ -56,7 +56,7 @@ Data contract (G1, done)
 Build order follows D-052: the Stage 1 model and core screens first, then notes and Stage 2, then the should-haves.
 
 ## 8. Parallel execution
-Tasks with no shared files and no output dependency may run in parallel, for example note generation and the Stage 1 model. Two tasks may never change the same file at the same time.
+Tasks with no shared files and no output dependency may run in parallel, for example note generation and the Stage 1 model. Two tasks may never change the same file at the same time. Only one infrastructure (Terraform) run at a time (D-086).
 
 ## 9. Handoffs
 Every handoff includes: task ID, status, files changed, tests run and results, metrics with the dataset they came from, known limits, open issues, next steps. No task is reported done without evidence (methodology 9.3).

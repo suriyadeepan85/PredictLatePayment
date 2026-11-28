@@ -1,6 +1,6 @@
-# Data Contract v1.4: Late Payment Prediction (Stage 1 and Stage 2)
+# Data Contract v1.5: Late Payment Prediction (Stage 1 and Stage 2)
 
-**Status:** APPROVED, gate G1 closed (D-075) · **Date:** November 26, 2026 · **Owner:** Suriyadeepan Narayanasamy
+**Status:** APPROVED, gate G1 closed (D-075) · **Date:** November 27, 2026 · **Owner:** Suriyadeepan Narayanasamy
 **Based on:** the owner's v1.1 (feature eligibility, history coverage, prediction-time rules), extended for the approved scope changes: note features and a second prediction 10 days before the due date (D-050, D-051, D-057, D-059). v1.3 adds the owner's November 26 voice-session decisions on Stage 2 inputs, notes and the IBM split (D-064 to D-068).
 
 This contract defines the data, the targets, the quality requirements and the rules for what may be used at prediction time. It does not select the final models or define application behaviour.
@@ -94,7 +94,7 @@ Approved by the owner, November 26 (D-065, D-066, D-067). The notes simulate the
 | note_date | date | For an invoice note: between that invoice's date and its Stage 2 scoring date |
 | author_role | category | Customer service or receivables analyst |
 | channel | category | Call, email or portal |
-| note_text | string | Synthetic; contains no real names |
+| note_text | string | Synthetic; no real names. The raw file contains obviously fake personal details (D-088); the masked file does not |
 
 **Which invoices get notes (D-066):**
 - Disputed = Yes: always a dispute thread linked to the invoice.
@@ -110,6 +110,14 @@ Approved by the owner, November 26 (D-065, D-066, D-067). The notes simulate the
 6. When scoring an invoice, only that customer's notes dated on or before the invoice's Stage 2 scoring date are used.
 7. Leakage alarm: if Stage 2 looks near-perfect, generation is checked for leaks. A modest gain over Stage 1 is expected.
 8. Every reported Stage 2 result is labelled as using synthetic notes anchored to real dispute events.
+
+**Personal details and masking (D-088):**
+1. Generated notes include obviously fake personal details: contact names from a fixed fake list, `@example.com` emails, `555` phone numbers, and reference numbers.
+2. A rules-based masking step (regular expressions plus the customer's fake contact list, no LLM) writes a second file. Names become one-way stand-ins such as "Contact 017", made from a salted hash, so the same person always gets the same label. Emails, phones and references become `[EMAIL]`, `[PHONE]` and `[REF]`. No lookup table is kept.
+3. `customerID`, `invoiceNumber` and `note_id` are never masked: they are the join keys.
+4. Two files: `notes_raw` (restricted; never read by the note reader or the app) and `notes_masked` (used by everything downstream).
+5. The masking rules live in `config/masking.yaml`, so a client can add its own patterns without changing code.
+6. Rule N6 stops the pipeline if anything that looks like personal data survives masking.
 
 The extracted signals (D-074) and the extraction prompt are defined in `specs/note_features.md`, not here.
 
@@ -161,6 +169,7 @@ The same rules apply where the columns exist (Q2, Q4, Q5, Q7, Q9). Checked in `n
 | N3 | Generator input contains an outcome column | Fail |
 | N4 | Note text contains a real company or person name | Fail |
 | N5 | Generated mix differs from section 6 (every disputed invoice has a dispute thread; about 33% of undisputed invoices have a note) | Fail |
+| N6 | The masked file still contains an email, a phone number, a reference pattern or a name from the contact list | Fail |
 
 ## 9. Dataset splits
 
@@ -217,3 +226,4 @@ Splits are chronological, never random, and change only through an approved deci
 | Nov 26, 2026 | v1.2: Stage 2 and notes added; Dataset B and C contracts; scoring times; history groups; calendar days |
 | Nov 26, 2026 | v1.3 (owner-approved changes from the voice session): Stage 2 history frozen at invoice date; notes linked by customer with topic and generation mix; section 6 renamed Notes data rules; N5 added; IBM SHA, quality check results and split counts |
 | Nov 26, 2026 | v1.4: G1 closed. Dataset B roles, scoring times, countryCode fairness group approved; Model A and ceiling model added as evaluation-only comparisons; leakage rule 4 clarified |
+| Nov 27, 2026 | v1.5: fake personal details in generated notes, rules-based one-way masking, raw and masked files, rule N6 (D-088) |

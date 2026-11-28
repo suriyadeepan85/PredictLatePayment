@@ -9,7 +9,7 @@ Make the prototype easy to run and, if the owner approves, deploy it.
 |---|---|---|
 | Local run | Must: `requirements.txt`, `make data`, `make train`, `make app` | Same |
 | Tests in CI | Should: GitHub Actions runs `pytest` on each push (no data needed; tests use small fixtures) | Must |
-| AWS deployment | Could, only with owner approval (Q-002, CLAUDE.md) | Infrastructure as code (CloudFormation), App Runner or ECS |
+| AWS deployment | Must (D-082): Lightsail container plus a SageMaker serverless endpoint, in Terraform, as `specs/infrastructure.md` says. Nothing is applied before the owner approves that spec and reviews the plan | ECS or EKS from the same image, deployed by GitHub Actions through OIDC |
 | Bedrock access | Depends on Q-001 and Q-003 | IAM role with Bedrock invoke only |
 
 ## 2. Permissions (methodology section 8)
@@ -20,7 +20,7 @@ Make the prototype easy to run and, if the owner approves, deploy it.
 | Store credentials | Never in git; environment variables or AWS Secrets Manager |
 
 ## 3. Deliverables
-`requirements.txt`, `Makefile`, `.github/workflows/tests.yml`; if approved, `infra/` templates and a cost estimate.
+`requirements.txt`, `Dockerfile`, `Makefile` (`plan`, `apply`, `restore`, `destroy`, `pipeline`, `deploy-app`), `.github/workflows/tests.yml`, Terraform in `infra/`, the bootstrap policies in `infra/bootstrap/`.
 
 ## 4. Acceptance criteria
 - A fresh clone, plus the two raw files, runs `make data train app` without manual steps.

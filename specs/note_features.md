@@ -12,7 +12,7 @@ Out of scope: generating the notes (`docs/data_contract.md` section 6), model tr
 ## 2. Inputs and dependencies
 | Input | Source | Rule |
 |---|---|---|
-| Notes | Dataset C, `data/generated/notes.csv` | Contract section 6; quality rules N1 to N5 must pass first |
+| Notes | Dataset C, masked file `data/generated/notes_masked.csv` | Contract section 6; quality rules N1 to N6 must pass first. The reader never sees the raw file (D-088) |
 | Invoices | Dataset B | `invoiceNumber`, `customerID`, `DueDate` only |
 | Stage 2 scoring date | Contract section 4 | DueDate minus 10 calendar days |
 
@@ -34,9 +34,9 @@ Extracted per note by the LLM, then combined for each invoice using only that cu
 "No note" stays a separate value and is never treated as "no". A customer with no notes is not the same as a customer whose notes say there is no problem.
 
 ## 4. Technical requirements (PROPOSED)
-1. Note reader: Claude Haiku 4.5 on Bedrock, temperature 0, one call per note. Notes are cached by `note_id`, so reruns cost nothing and give the same output.
+1. Note reader: Claude Haiku 4.5 on Bedrock, temperature 0, one call per note. It runs once, as a step in the SageMaker Pipeline (D-084); its output is saved and reused, and nothing calls it when a judge uses the app. Notes are cached by `note_id`, so reruns cost nothing and give the same output.
 2. The output is JSON checked against a fixed schema (the section 3 fields). If the output is invalid, retry once; if it is still invalid, log the note and set its signals to unknown.
-3. The reader sees only `note_text`, `note_date` and `author_role`. It never sees the topic label, the Disputed flag or any outcome.
+3. The reader sees only the masked `note_text`, `note_date` and `author_role`. It never sees the topic label, the Disputed flag or any outcome.
 4. How invoice notes and customer notes combine: an invoice's S1 to S4 come from notes linked to that invoice. S5 to S7 come from all of the customer's notes up to the cut-off. If a later note says a dispute is resolved, S1 becomes no.
 5. How the promised date is turned into a model input (for example days between the promised date and the due date) is set in the G2 feature spec.
 6. For offline development, a rules-based reader with the same output format can stand in for the LLM.
@@ -77,3 +77,4 @@ Extracted per note by the LLM, then combined for each invoice using only that cu
 | Date | Change |
 |---|---|
 | Nov 26, 2026 | v0.1: seven signals approved (D-074); other sections proposed |
+| Nov 27, 2026 | v0.2: reader works on the masked notes; runs as a pipeline step |
