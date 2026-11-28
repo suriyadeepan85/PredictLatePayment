@@ -38,15 +38,21 @@ def known_by(df, cutoff):
 
 
 def top_share_capture(y, score, share=0.2):
-    """Share of all late invoices that fall in the top `share` of scores."""
-    y = np.asarray(y); order = np.argsort(-np.asarray(score), kind="stable")
-    k = int(np.ceil(share * len(y)))
-    return y[order[:k]].sum() / max(y.sum(), 1)
+    """Share of all late invoices that fall in the top `share` of scores. Ties at the cut-off are
+    shared in proportion (the expected value under random tie-breaking), so row order never matters."""
+    y = np.asarray(y, float); s = np.asarray(score, float)
+    k = share * len(y)
+    thr = np.sort(s)[::-1][int(np.ceil(k)) - 1]
+    above = s > thr; tied = s == thr
+    take = (k - above.sum()) / max(tied.sum(), 1)
+    return (y[above].sum() + take * y[tied].sum()) / max(y.sum(), 1)
 
 
 def metrics(y, score):
+    y = np.asarray(y, float); score = np.asarray(score, float)
     return {"auc": roc_auc_score(y, score), "pr_auc": average_precision_score(y, score),
-            "top20_capture": top_share_capture(y, score)}
+            "top20_capture": top_share_capture(y, score),
+            "brier": float(np.mean((score - y) ** 2)), "mean_pred": float(score.mean()), "actual_rate": float(y.mean())}
 
 
 def baseline_score(df, fill):
@@ -60,7 +66,8 @@ def make_lr(numeric=NUMERIC_STAGE1, categorical=CATEGORICAL_STAGE1):
                           ("scale", StandardScaler())]), numeric),
         ("cat", OneHotEncoder(handle_unknown="ignore", min_frequency=20), categorical),
     ])
-    return Pipeline([("pre", pre), ("model", LogisticRegression(max_iter=2000, class_weight="balanced", C=1.0))])
+    # No class weighting: weighting inflated probabilities about 2x (review R-03), and cash at risk needs real probabilities.
+    return Pipeline([("pre", pre), ("model", LogisticRegression(max_iter=2000, C=1.0))])
 
 
 def xgb_matrix(df, numeric=NUMERIC_STAGE1, categorical=CATEGORICAL_STAGE1, categories=None):
@@ -72,8 +79,8 @@ def xgb_matrix(df, numeric=NUMERIC_STAGE1, categorical=CATEGORICAL_STAGE1, categ
 
 
 def make_xgb(y):
-    pos = float(np.sum(y)); neg = float(len(y) - pos)
-    return XGBClassifier(**XGB_PARAMS, scale_pos_weight=neg / max(pos, 1), enable_categorical=True)
+    # No scale_pos_weight, for calibrated probabilities (review R-03).
+    return XGBClassifier(**XGB_PARAMS, enable_categorical=True)
 
 
 def fit_predict(kind, tr, va, numeric=NUMERIC_STAGE1, categorical=CATEGORICAL_STAGE1):
@@ -114,8 +121,7 @@ def rolling_validation(train_df, n_splits=5, kinds=("baseline", "logistic", "xgb
 
 def group_rates(df, score_col, group_col, flag_share=0.2):
     """Flag the top `flag_share` by score; report rates by group (D-022)."""
-    thr = df[score_col].quantile(1 - flag_share)
-    f = df[score_col] >= thr
+    f = df[score_col].rank(method="first", ascending=False) <= flag_share * len(df)   # exactly the top share
     y = df["late"] == 1
     def agg(g):
         fy, yy = f.loc[g.index], y.loc[g.index]

@@ -52,3 +52,33 @@ def test_matches_brute_force_on_real_shape():
         assert h.loc[i, "hist_n_paid"] == len(prior)
         if len(prior):
             assert np.isclose(h.loc[i, "hist_late_share"], prior.late.mean())
+
+
+def test_brute_force_all_measures():
+    rng = np.random.default_rng(3)
+    n = 250
+    inv = pd.Timestamp("2020-01-01") + pd.to_timedelta(rng.integers(0, 150, n), "D")
+    df = pd.DataFrame({"customer_id": rng.choice(list("abc"), n), "invoice_date": inv,
+                       "clear_date": inv + pd.to_timedelta(rng.integers(0, 60, n), "D")})
+    df["days_late"] = rng.integers(-120, 150, n).astype(float)
+    df["late"] = (df["days_late"] > 3).astype(float)
+    h = build_history(df)
+    for i in rng.choice(n, 40, replace=False):
+        p = df[(df.customer_id == df.customer_id[i]) & (df.clear_date < df.invoice_date[i])].sort_values(["clear_date", "invoice_date"], kind="mergesort")
+        if len(p) == 0:
+            continue
+        dl = p.days_late.clip(-90, 90)
+        assert np.isclose(h.loc[i, "hist_avg_days_late"], dl.mean())
+        if len(p) >= 2:
+            assert np.isclose(h.loc[i, "hist_std_days_late"], dl.std(ddof=1))
+        lates = p[p.late == 1]
+        exp = (df.invoice_date[i] - lates.clear_date.max()).days if len(lates) else np.nan
+        assert (np.isnan(exp) and np.isnan(h.loc[i, "hist_days_since_last_late"])) or h.loc[i, "hist_days_since_last_late"] == exp
+        assert h.loc[i, "hist_last_late"] == p.late.iloc[-1]
+
+
+def test_top_share_capture_ties_are_order_free():
+    from src.model.train import top_share_capture
+    y = np.array([1, 0, 1, 0, 0, 0, 0, 0, 0, 0]); s = np.array([1, 1, 1, 1, 0, 0, 0, 0, 0, 0])
+    assert np.isclose(top_share_capture(y, s), top_share_capture(y[::-1], s[::-1]))
+    assert np.isclose(top_share_capture(y, s), 0.5)        # 2 of 4 tied slots taken, half the lates expected

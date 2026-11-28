@@ -1,19 +1,23 @@
 # Rules-based masking of personal details in note text (data contract section 6, D-088).
 # A client adds its own patterns here; no code change needed. Order matters: first match wins.
+# Known business keys (invoice and customer numbers) are protected before any pattern runs,
+# so a pattern can never damage a join key.
 patterns:
   - name: email
-    regex: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
+    regex: '[A-Za-z0-9._%+-]+\s*@\s*[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
     replace: '[EMAIL]'
   - name: phone
-    # Separators required, so business keys such as 10-digit invoice numbers are not masked.
-    regex: '(?:\+?1[-. ])?(?:\(?\d{3}\)?[-. ])?\b\d{3}[-. ]\d{4}\b'
+    # With separators, or a bare 10-digit run (safe because known keys are protected first).
+    regex: '(?:\+?1[-. ]?)?(?:\(?\d{3}\)?[-. ])?\b\d{3}[-. ]\d{4}\b|\b\d{10}\b'
     replace: '[PHONE]'
   - name: reference
-    regex: '\b(?:REF|CASE|TKT)-?\d{4,}\b'
+    regex: '(?i)\b(?:REF|CASE|TKT|TICKET)\s*[-#:]?\s*\d{4,}\b'
     replace: '[REF]'
 names:
-  # Names come from each customer's contact list (the CRM at a client).
-  # Each name becomes a one-way stand-in "Contact NNN" from a salted hash; no lookup table is kept.
+  # Names come from each customer's contact list (the CRM at a client). Full names, "Last, First",
+  # and first or last names on their own are masked, whole words only, any case, any spacing.
+  # Each person becomes a one-way stand-in "Contact NNN" from a salted hash; no lookup table is kept.
   label: 'Contact {:03d}'
-  salt_env: LPP_MASK_SALT        # set in the environment; the default below is for the demo only
+  min_part_length: 3             # parts shorter than this are not masked alone (too many false hits)
+  salt_env: LPP_MASK_SALT        # must be set outside the demo; the default is public
   default_salt: 'demo-salt-not-secret'

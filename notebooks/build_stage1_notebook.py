@@ -38,7 +38,7 @@ md("""## 2. Rolling validation inside the training period
 
 Five time-ordered folds. Each trains on everything before a point (only invoices already paid) and validates on the next block."""),
 code("""results, last_valid = T.rolling_validation(train)
-summary = results.groupby("model")[["auc", "pr_auc", "top20_capture"]].agg(["mean", "std"]).round(3)
+summary = results.groupby("model")[["auc", "pr_auc", "top20_capture", "brier", "mean_pred", "actual_rate"]].mean().round(3)
 summary"""),
 code("""results.pivot(index="fold", columns="model", values="auc").round(3)"""),
 md("""**How to read it**
@@ -105,7 +105,7 @@ for kind in ["logistic", "xgboost"]:
             "rows": len(known), "late_rate": float(known["late"].mean()), "inputs": T.NUMERIC_STAGE1 + T.CATEGORICAL_STAGE1,
             "validation": {k: round(float(v), 4) for k, v in m.items()}, "test_set": "not used"}
     json.dump(card, open(path.replace(".joblib", ".json"), "w"), indent=2)
-    params = T.XGB_PARAMS if kind == "xgboost" else {"C": 1.0, "class_weight": "balanced", "min_frequency": 20}
+    params = T.XGB_PARAMS if kind == "xgboost" else {"C": 1.0, "class_weight": "none", "min_frequency": 20}
     run_id = tracking.log_run(f"stage1_{kind}", {**params, "rows": len(known)},
                               {f"cv_{k}": v for k, v in m.items()}, artifacts=[path], card=card)
     final[kind] = run_id

@@ -23,7 +23,8 @@ def build_history(df, asof_col="invoice_date"):
     out = pd.DataFrame(index=df.index, columns=FEATURES, dtype=float)
     paid = df[df["clear_date"].notna()]
     for cust, rows in df.groupby("customer_id", sort=False):
-        p = paid[paid["customer_id"] == cust].sort_values("clear_date")
+        # Deterministic order for ties: clear date, then invoice date, then original row order.
+        p = paid[paid["customer_id"] == cust].sort_values(["clear_date", "invoice_date"], kind="mergesort")
         asof = rows[asof_col].values
         if p.empty:
             out.loc[rows.index, "hist_n_paid"] = 0

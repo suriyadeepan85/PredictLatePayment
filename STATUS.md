@@ -12,8 +12,9 @@
 - Data contract v1.3: Stage 2 inputs, notes data rules and IBM split approved (D-064 to D-068)
 - IBM split notebook with scikit-learn TimeSeriesSplit (`notebooks/03_ibm_split.ipynb`, chart `docs/img/ibm_split.png`)
 - History profile (`notebooks/02_history_profile.ipynb`)
+- Independent review done (`reports/review_2026-11-27.md`); technical fixes applied (D-099): calibrated probabilities, hardened masking, 32 tests
 - Notes generated with fake personal details, masked by rules (N6 = 0), read into signals (`notebooks/05_note_features.ipynb`)
-- IBM Model A, Model B, ceiling validated (`notebooks/07_stage2_models.ipynb`): notes recover 85% of the ceiling's gain
+- IBM Model A, Model B, ceiling built (`notebooks/07_stage2_models.ipynb`); the headline result is invalid until Q-017 and Q-018 are decided (D-101)
 - Stage 1 trained and validated (`notebooks/06_stage1_model.ipynb`, MLflow); infrastructure and security spec (`specs/infrastructure.md`); contract v1.5 (masking)
 - G2 feature spec, shared code (`src/data/load.py`, `src/features/history.py`), tests (4 pass), `notebooks/04_features.ipynb`
 - Coordinator and role specs v0.1 in `specs/agents/` (D-079); index in `specs/README.md`
@@ -22,7 +23,7 @@
 - Methodology set up: `CLAUDE.md`, `DECISIONS.md`, `OPEN_ITEMS.md`, `STATUS.md`, `specs/methodology.md`
 
 ## Waiting for the owner
-1. G3 calls: Q-015 (fairness rule), Q-016 (thresholds, risk bands)
+1. Decisions from the independent review: Q-017 (A: Stage 2 population), Q-018 (B: honest Stage 2 claim), Q-015 (C: fairness rule); also Q-016 (risk bands), Q-019 (supersede D-001, D-004), and approval of D-099 (review fixes, incl. contract v1.6 wording for training-only rare codes and known-value masking)
 1b. Approve `specs/infrastructure.md` and do owner steps 2, 3, 5 to 9
 2. Approve the coordinator spec (human-owned, `specs/agents/coordinator.md` section 3)
 3. Q-014: copy the system spec into the repo (recommended)

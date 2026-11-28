@@ -5,3 +5,10 @@ __pycache__/
 models/
 mlruns/
 mlflow.db
+.env
+.env.*
+*.pem
+*.key
+terraform.tfvars
+.terraform/
+*.tfstate*

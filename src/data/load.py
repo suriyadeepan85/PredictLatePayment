@@ -21,9 +21,12 @@ def _yyyymmdd(s):
     return pd.to_datetime(s.astype("Int64").astype(str), format="%Y%m%d", errors="coerce")
 
 
-def _group_rare(s, min_rows=MIN_CATEGORY_ROWS):
-    counts = s.value_counts()
-    return s.where(s.map(counts) >= min_rows, "OTHER")
+def _group_rare(s, fit_mask, min_rows=MIN_CATEGORY_ROWS):
+    """Q12: codes with fewer than min_rows TRAINING rows become OTHER (counted on training rows only,
+    so test and replay data never decide the grouping)."""
+    counts = s[fit_mask].value_counts()
+    keep = set(counts[counts >= min_rows].index)
+    return s.where(s.isin(keep), "OTHER")
 
 
 def load_a(path, grace_days=GRACE_DAYS, check_sha=True):
@@ -55,8 +58,11 @@ def load_a(path, grace_days=GRACE_DAYS, check_sha=True):
         "business_code": df["business_code"].astype(str),
         "is_open": df["isOpen"].astype(int),
     })
+    if out[["invoice_id", "customer_id", "amount"]].isna().any().any() or (out["customer_id"] == "nan").any():  # Q4
+        raise ValueError("Q4: missing required value")
     if out[["invoice_date", "due_date", "baseline_date"]].isna().any().any():   # Q4, Q5
         raise ValueError("Q4/Q5: missing or unparseable required date")
+    log["Q11 dropped columns"] = "area_business, posting_id, name_customer (masked), invoice_currency, document type, isOpen"
     n = len(out); out = out[~(out["due_date"] < out["invoice_date"])]           # Q6
     log["Q6 due before invoice dropped"] = n - len(out)
     if (out["clear_date"] < out["invoice_date"]).any():                        # Q7
@@ -68,8 +74,9 @@ def load_a(path, grace_days=GRACE_DAYS, check_sha=True):
     out["terms_days"] = (out["due_date"] - out["baseline_date"]).dt.days
     if not out["terms_days"].between(0, 120).all():                            # Q10
         raise ValueError("Q10: payment terms outside 0 to 120 days")
-    out["payment_terms"] = _group_rare(out["payment_terms"])                   # Q12
-    out["business_code"] = _group_rare(out["business_code"])
+    fit = (out["invoice_date"] < CUT_A) & (out["is_open"] == 0)               # training rows
+    out["payment_terms"] = _group_rare(out["payment_terms"], fit)              # Q12
+    out["business_code"] = _group_rare(out["business_code"], fit)
     codes = {c: f"Customer {i:04d}" for i, c in enumerate(sorted(out["customer_id"].unique()), 1)}
     out["customer_label"] = out["customer_id"].map(codes)                      # masking, section 11
     out["days_late"] = (out["clear_date"] - out["due_date"]).dt.days

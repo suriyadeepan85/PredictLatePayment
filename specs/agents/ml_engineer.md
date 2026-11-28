@@ -25,7 +25,12 @@ Defined in `specs/features.md` (gate G2). Fixed limits from the contract: histor
 Late = paid more than 3 calendar days after the due date (APPROVED, D-012, D-056). Labels only for paid invoices. Open invoices are never in any metric.
 
 ## 5. Model development strategy
-Logistic regression first, as a simple, explainable reference; then XGBoost (D-020, D-084). The better one on validation goes forward. XGBoost class imbalance handled with `scale_pos_weight`, not resampling. Hyperparameters tuned only inside the training period, using `TimeSeriesSplit`. Fixed random seed. Same code for all four IBM-side models, changing only the input list.
+Logistic regression first, as a simple, explainable reference; then XGBoost (D-020, D-084). The better one on validation goes forward. No class weighting or resampling, so predicted probabilities stay calibrated for cash at risk (review R-03); calibration is reported (mean predicted vs actual, Brier score). Hyperparameters tuned only inside the training period, using `TimeSeriesSplit`. Fixed random seed. Same code for all four IBM-side models, changing only the input list.
+
+### Settings (for a rebuild)
+- Logistic regression: median imputation with missing-value indicators, standard scaling, one-hot encoding (codes with fewer than 20 rows grouped), C = 1.0, no class weighting.
+- XGBoost: 400 trees, learning rate 0.05, depth 5, subsample 0.8, column sample 0.8, min child weight 20, L2 regularisation 5, `hist` tree method, native categorical handling, seed 42, no class weighting.
+- Rolling validation: `TimeSeriesSplit` on date-sorted training invoices, 5 folds (Dataset A) or 4 (Dataset B); each fold trains only on invoices paid before the fold's first validation date (D-089).
 
 ## 6. Training and evaluation strategy
 - Splits: A train before October 1, 2019, test after (APPROVED, D-063); B train before July 1, 2013, test after (APPROVED, D-068).

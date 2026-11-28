@@ -41,9 +41,12 @@ Extracted per note by the LLM, then combined for each invoice using only that cu
 5. How the promised date is turned into a model input (for example days between the promised date and the due date) is set in the G2 feature spec.
 6. For offline development, a rules-based reader with the same output format can stand in for the LLM.
 
+## 4b. Note generator settings (for a rebuild)
+`src/data/notes_generate.py`, `generate_notes(invoices, seed=42, generic_share=0.33, dispute_like_share=0.2)`: 1 to 3 fake contacts per customer; dispute thread = opening note, 0 to 2 follow-ups, escalation with probability 0.3, resolution with probability 0.25; personal details appended with probabilities 0.7 (name), 0.3 (email), 0.2 (phone), 0.3 (case reference). Generic topics are equally likely. Under review: decision B (D-099).
+
 ## 5. Interface (PROPOSED)
-- `src/features/notes.py`: `extract(notes_df) -> signals_df` (one row per note) and `aggregate(signals_df, invoices_df) -> features_df` (one row per invoice, columns `s1_open_dispute` … `s7_open_claim`).
-- Output file: `data/generated/note_signals.parquet`, never committed.
+- `src/features/notes.py`: `extract(notes_df, reader="rules"|"llm") -> signals_df` (one row per note) and `aggregate(notes_df, signals_df, invoices_df) -> features_df` (one row per invoice; columns and encodings in `specs/features.md`, "Note signal encodings").
+- Output files: `data/generated/note_signals.csv` and `note_features.csv`, never committed.
 - Notebook: `notebooks/05_note_features.ipynb` runs extraction on a sample, shows the signal distributions, and runs the section 7 checks.
 
 ## 6. Constraints
@@ -55,10 +58,10 @@ Extracted per note by the LLM, then combined for each invoice using only that cu
 | Test | Pass condition |
 |---|---|
 | T1 Schema | 100% of outputs parse into the section 3 fields |
-| T2 Topic check | S1 agrees with the generator's topic label on at least 90% of dispute-topic notes; at most 10% false "yes" on non-dispute notes. The dispute-like generic notes are reported separately |
+| T2 Topic check | At invoice level: at least 90% of invoices with a generated dispute thread get a dispute signal, and at most 10% of invoices without one get an open-dispute signal. Measured at invoice level because follow-up notes in a thread often don't repeat the word "dispute" (note level reported for information) |
 | T3 Cut-off | No signal uses a note dated after the invoice's Stage 2 scoring date |
-| T4 No leak | The reader's inputs contain no outcome column, no Disputed flag and no topic label |
-| T5 Repeatability | Rerunning on the same notes gives identical signals |
+| T4 No leak | The reader's inputs contain no outcome column, no Disputed flag and no topic label (`tests/test_contract_and_leakage.py`) |
+| T5 Repeatability | Rerunning on the same notes gives identical signals (`tests/test_contract_and_leakage.py`) |
 
 ## 8. Acceptance criteria
 - T1 to T5 pass.
@@ -79,3 +82,4 @@ Extracted per note by the LLM, then combined for each invoice using only that cu
 | Nov 26, 2026 | v0.1: seven signals approved (D-074); other sections proposed |
 | Nov 27, 2026 | v0.2: reader works on the masked notes; runs as a pipeline step |
 | Nov 27, 2026 | Built: rules-based reader, Haiku reader code (untested until Bedrock access), aggregation, tests T1, T3, T5 in `tests/test_notes.py`; notebook 05 |
+| Nov 27, 2026 | v0.3 after the independent review: interface and outputs match the code (R-13); generator settings written out (R-06); T2 measured at invoice level; T4 and T5 automated (R-07) |
