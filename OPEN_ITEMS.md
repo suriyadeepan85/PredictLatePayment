@@ -20,6 +20,8 @@ Format and rules: `specs/methodology.md`. Seeded November 26, 2026.
 | Q-012 | Also train a Stage-1-style model on IBM (no notes), so the Stage 2 gain from notes is measured on the same data? Claude recommends yes: without it, Stage 2 versus Stage 1 compares two different datasets | RESOLVED (D-071) | Owner | G1 |
 | Q-013 | Use countryCode as the IBM fairness group (5 codes, 387 to 616 invoices each, late rates 18% to 36%)? Proposed by Claude | RESOLVED (D-072) | Owner | G1 |
 | Q-014 | Move the system spec (Claude Doc "Late Payment Prototype v2") into the repo as `SYSTEM_SPEC.md`, so the repo is the single source for a rebuild? The Doc can remain the pitch narrative. Claude recommends yes | OPEN | Owner | G2 |
+| Q-015 | G3: is D-022's exception ("unless the group really is late more often") acceptable when it lets CA02 and new customers be flagged 6 to 7 times more often by false alarm (D-091)? Claude recommends tightening it: compare false alarms to each group's own late rate, and show these groups in the app as "review" rather than "chase" | OPEN | Owner | G3 |
+| Q-016 | G3: pass thresholds for M1 to M5 and default risk bands (proposed: high = top 20%, medium = next 30%) | OPEN | Owner | G3 |
 
 ## Assumptions
 

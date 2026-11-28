@@ -2,3 +2,6 @@ data/raw/
 *.csv
 .ipynb_checkpoints/
 __pycache__/
+models/
+mlruns/
+mlflow.db
