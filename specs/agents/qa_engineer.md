@@ -22,6 +22,15 @@ Check, independently of the builder, that each deliverable meets its spec. QA ch
 | **After work (build review)** | The result matches the brief and its spec: tests, counts, interfaces, leakage rules; the change-control steps were followed for any change | `reports/qa_<component>_<date>.md` |
 | **At milestones (independent review)** | A fresh session that sees only the repo, never the build conversation, checks the work end to end and tries to rebuild key numbers from the specs alone (D-077) | `reports/review_<date>.md`; goals, rules and checklist in `reviewer.md` |
 
+### When reviews run, by risk (D-108)
+| Task type | Plan review | Build review |
+|---|---|---|
+| High risk: infrastructure, security, data handling, anything that produces a reported metric | Every task | Every task. For infrastructure: before the owner applies, the reviewer checks the saved `terraform plan` against `specs/infrastructure.md` (only `lpp-` resources, us-east-1, no policy wider than the boundary, checks I1 to I9) |
+| Normal: app screens, charts, documentation | Batched, once per group of related tasks | Batched, once per group |
+
+### What the reviewer receives
+The task brief, the spec sections and records it cites, the handoff report, the diff (or saved plan), and the test output. Not the builder's conversation, so the review stays independent and its context stays small.
+
 ## 4. Rules
 QA does not fix what it finds; it reports, and the coordinator assigns the fix. QA may reject a deliverable. Reports go to `reports/qa_<component>_<date>.md`: what was checked, how, results, failures, evidence.
 

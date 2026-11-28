@@ -89,5 +89,13 @@ Rules that always hold:
 - Models are never overwritten: each run is a new MLflow version; the registry keeps earlier versions.
 - In the hackathon, a CR that is quick and low-risk may be done on `main`, provided steps 1, 3, 5 and 7 are followed and the last good tag exists.
 
-## 14. Status reporting
+## 14. Context packaging (D-108)
+Every agent starts fresh. It never receives another agent's conversation, only files.
+1. **Task brief** (`tasks/T-###.md`, template in `tasks/TEMPLATE.md`): objective, the exact spec sections and records to read, files it may change, acceptance criteria copied from the spec, and the evidence to hand back.
+2. **Read list, not the whole repo:** the brief names sections by path, so the agent loads only what the task needs (for example `specs/infrastructure.md` sections 4 to 6, not the ML specs).
+3. **Handoff report** (`reports/T-###_handoff.md`): what was done, evidence, limits, open questions. This, not the builder's reasoning, is what the reviewer and the coordinator read.
+4. **Shared memory is the repo:** decisions, specs, status, session log. If something is not in a file, the next agent does not know it.
+5. **Summaries over raw output:** large outputs (a `terraform plan`, test logs) are saved to files and summarised in the handoff, with the file path, so no context is spent re-reading them.
+
+## 15. Status reporting
 `STATUS.md` holds the current gate, what is done, what is next and what is waiting for the owner. It is updated at every checkpoint and pushed.
