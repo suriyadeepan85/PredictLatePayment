@@ -81,11 +81,11 @@ Applies to any change to an approved spec, decision, contract rule, or to code, 
 | 4. Branch | Code changes on a branch `cr-###-short-name`; `main` keeps the last working version | Branch name |
 | 5. Re-run and compare | Tests pass; affected notebooks re-run; new metrics logged to MLflow next to the old run, tagged with the CR | MLflow run IDs, test output |
 | 6. Review | QA checks the change matches the CR and nothing else moved (QA spec, section 3) | `reports/` entry |
-| 7. Merge and tag | Merge to `main`, tag `good-YYYYMMDD-N`; the replaced record becomes SUPERSEDED, never deleted | Tag, record status |
+| 7. Merge and mark | Merge to `main`; add the commit to `docs/good_versions.md` as `good-YYYYMMDD-N` (tags can't be pushed from the build workspace); the replaced record becomes SUPERSEDED, never deleted | `docs/good_versions.md` line, record status |
 
 Rules that always hold:
 - Commit after every verified step and push at every checkpoint; nothing stays only in the workspace.
-- A working version is tagged `good-YYYYMMDD-N` before any change that could break it (code, models) and `infra-good-...` for infrastructure.
+- A working version is recorded in `docs/good_versions.md` before any change that could break it. Infrastructure applies are tagged `infra-good-...` from the owner's laptop, where tags can be pushed.
 - Models are never overwritten: each run is a new MLflow version; the registry keeps earlier versions.
 - In the hackathon, a CR that is quick and low-risk may be done on `main`, provided steps 1, 3, 5 and 7 are followed and the last good tag exists.
 
