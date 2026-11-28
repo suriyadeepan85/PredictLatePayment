@@ -7,7 +7,7 @@ Format and rules: `specs/methodology.md`. Seeded November 26, 2026.
 | ID | Question | Status | Owner | Blocks |
 |---|---|---|---|---|
 | Q-001 | Do the organizers accept the dataset licences (CC BY-NC, and IBM with no stated licence) and use of personal AWS and Claude accounts? | OPEN | Owner (email sent?) | Presenting |
-| Q-002 | Must the working application be hosted, or can it run on the owner's laptop? | OPEN | Owner | Whether AWS becomes a must |
+| Q-002 | Must the working application be hosted, or can it run on the owner's laptop? | RESOLVED (D-082: hosted) | Owner | Whether AWS becomes a must |
 | Q-003 | Do the AWS credits cover Claude on Bedrock? | OPEN | Owner | Outreach draft only |
 | Q-004 | What business-case figure can be shared (share of invoices paid late, cost per account in collections)? | OPEN | Owner | Deck |
 | Q-005 | Add results at 0, 5 and 7 days of grace to the evaluation? | OPEN | Owner | G3 |

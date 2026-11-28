@@ -23,11 +23,10 @@
 - Methodology set up: `CLAUDE.md`, `DECISIONS.md`, `OPEN_ITEMS.md`, `STATUS.md`, `specs/methodology.md`
 
 ## Waiting for the owner
-1b. Approve `specs/infrastructure.md` and do owner steps 2, 3, 5 to 9
+1. Approve `specs/infrastructure.md` and do owner steps 2, 3, 5 to 9
 2. Approve the coordinator spec (human-owned, `specs/agents/coordinator.md` section 3)
-3. Q-014: copy the system spec into the repo (recommended)
-4. Answer Q-001 (organizer approval) and Q-002 (hosted or laptop)
-5. Confirm the older PROPOSED records; D-001 and D-004 are out of date (superseded in practice by D-050, D-051)
+3. Q-001: organizers' approval of the personal AWS and Claude accounts
+4. Q-014: copy the system spec into the repo (recommended)
 
 ## Next
 1. Streamlit app (judge-facing: walkthrough, per-session clock, adjustable bands, SHAP reasons, outreach draft)
