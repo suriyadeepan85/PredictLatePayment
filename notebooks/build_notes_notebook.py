@@ -5,12 +5,12 @@ md, code = nbf.v4.new_markdown_cell, nbf.v4.new_code_cell
 cells = [
 md("""# 05 · Notes: generate, mask, read, turn into signals (Stage 2)
 
-1. **Generate** synthetic account notes for the IBM invoices, blind to outcomes (data contract section 6), with obviously fake personal details (D-088).
+1. **Generate** synthetic account notes for the IBM invoices, blind to outcomes (data contract section 6), with obviously fake personal details (D-088). Dispute notes use varied wording, 30% of disputes are first noted only after the Stage 2 date, and routine notes appear on any invoice (D-104, D-109).
 2. **Mask** the personal details with plain rules, no LLM, into a second file; check nothing survives (rule N6).
 3. **Read** each masked note into structured fields (`specs/note_features.md`).
 4. **Aggregate** to the seven signals per invoice, using only notes dated on or before the Stage 2 date (due date minus 10 days).
 
-**Reader used here:** the rules-based stand-in. The Claude Haiku reader (`extract_llm`) has the same output and switches in once Bedrock access is approved (Q-001, Q-003). Because the rules reader was written alongside the note templates, its accuracy here is close to perfect by construction. The real test of note reading comes with Haiku."""),
+**Reader used here:** the rules-based stand-in. The Claude Haiku reader (`extract_llm`) has the same output and switches in once Bedrock access is approved (Q-001, Q-003). Its keyword lists are broader than the templates, so it makes some realistic mistakes, but it was still written by the same hand as the templates. The real test of note reading comes with Haiku."""),
 code("""import sys; sys.path.insert(0, "..")
 import os
 import numpy as np
@@ -40,26 +40,15 @@ n6 = leftover_pii(masked, contacts, cfg)
 print("N6, masked notes still containing personal data:", len(n6), "(must be 0)")
 assert len(n6) == 0
 pd.DataFrame({"raw": raw["note_text"].head(4), "masked": masked["note_text"].head(4)})"""),
-md("## 3. Quality rules N1 to N5"),
-code("""inv = b.set_index("invoice_id")
-m = masked.copy(); m["note_date"] = pd.to_datetime(m["note_date"])
-linked = m[m["invoiceNumber"].notna()].join(inv[["customer_id", "invoice_date", "due_date"]], on="invoiceNumber")
-checks = {
-    "N1 unknown customer": int((~m["customerID"].isin(b["customer_id"])).sum()),
-    "N1 invoice not for that customer": int((linked["customer_id"] != linked["customerID"]).sum()),
-    "N2 dated outside invoice date..Stage 2 date": int(((linked["note_date"] < linked["invoice_date"]) |
-                                                         (linked["note_date"] > linked["due_date"] - pd.Timedelta(days=10))).sum()),
-    "N3 duplicate note_id": int(m["note_id"].duplicated().sum()),
-}
-disputed_ids = set(b.loc[b["disputed"] == 1, "invoice_id"])
-with_thread = set(m.loc[m["topic"] == "invoice dispute", "invoiceNumber"])
-und = b[b["disputed"] == 0]
-share_noted = und["invoice_id"].isin(set(m["invoiceNumber"])).mean()
-checks["N5 disputed invoices without a dispute thread"] = len(disputed_ids - with_thread)
+md("## 3. Quality rules N1 to N6 (shared code: `src/data/notes_checks.py`)"),
+code("""from src.data.notes_checks import run_checks
+checks = run_checks(masked, b, contacts, cfg)
 print(checks)
-print(f"N5 share of undisputed invoices with an invoice-linked generic note: {share_noted:.2f} "
-      "(target about 0.33; claim and contact-change notes are customer-level, so this reads lower)")
-assert all(v == 0 for v in checks.values())"""),
+assert all(v == 0 for v in checks.values())
+m = masked.merge(b[["invoice_id", "due_date"]], left_on="invoiceNumber", right_on="invoice_id", how="left")
+first_dispute = m[m["topic"] == "invoice dispute"].groupby("invoiceNumber").agg(first=("note_date", "min"), due=("due_date", "first"))
+late_noted = (pd.to_datetime(first_dispute["first"]) > first_dispute["due"] - pd.Timedelta(days=10)).mean()
+print(f"Disputed invoices whose dispute is first noted after the Stage 2 date: {late_noted:.2f} (target 0.30, D-104)")"""),
 md("## 4. Read every masked note"),
 code("""signals = extract(masked, reader="rules")
 signals.to_csv("../data/generated/note_signals.csv", index=False)

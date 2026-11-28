@@ -26,3 +26,9 @@ A short, dated summary of each working session (D-106). It gives a fresh session
 - **Owner decisions (text):** tightened fairness rule (D-102); Stage 2 scores only invoices still unpaid (D-103); honest notes plus a what-if curve (D-104); default risk bands (D-105); D-001 and D-004 superseded.
 - **Open:** Q-001 (organizers' approval of the personal account), Q-003 (Bedrock credits), approval of `specs/infrastructure.md`, the coordinator spec, Q-014 (system spec in the repo).
 - **Next:** rebuild Stage 2 under D-103 and D-104; the Streamlit app; the evaluator pass; deployment.
+
+## November 28 (after midnight)
+- Owner asked how the reviewer runs per task and how context is handled; written as D-108 (task briefs, handoff reports, risk-based review frequency; `tasks/TEMPLATE.md`).
+- Stage 2 rebuilt: only invoices unpaid on the Stage 2 date; varied note wording; 30% of disputes noted late; routine notes on every invoice (found and removed an artifact, D-109); what-if curve averaged over 3 note generations (D-110).
+- Waiting: D-109 approval (contract section 6 wording), infrastructure spec, coordinator spec, Q-001.
+

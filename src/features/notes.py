@@ -14,22 +14,31 @@ FIELDS = ["dispute", "dispute_resolved", "reason", "missing_po_or_contact", "pro
           "promised_date", "escalation", "claim", "tone"]
 REASONS = ["wrong amount", "duplicate charge", "pricing", "goods or service issue", "other", "none"]
 YESNO = {"yes", "no"}
-NEG = re.compile(r"frustrat|disput|still waiting|escalat|not confirmed|damaged", re.I)
+NEG = re.compile(r"frustrat|disput|still waiting|escalat|not confirmed|damaged|won't|on hold|pushed back|contest|challeng", re.I)
 POS = re.compile(r"happy|accepted|confirmed payment|will pay as normal|resolved", re.I)
+
+
+# General keyword lists, deliberately broader than any template, so some routine notes are misread
+# (as a real reader would sometimes do). The Haiku reader replaces this when Bedrock is approved.
+DISPUTE_RX = re.compile(r"disput|contest|challeng|pushed back|won't pay|on hold|won't accept|doesn't match|charged more|wrong", re.I)
+REASON_RX = [("duplicate charge", r"twice|repeat|duplicate"), ("pricing", r"price|rate"),
+             ("wrong amount", r"amount|total|charged more|doesn't match"),
+             ("goods or service issue", r"damaged|never arrived|wasn't finished|not completed"),
+             ("other", r"proof of delivery|line items|documents")]
 
 
 def extract_rules(text):
     t = text.lower()
-    dispute = bool(re.search(r"\bdisput", t))
-    m = re.search(r"reason logged: ([a-z ]+)\.", t)
+    dispute = bool(DISPUTE_RX.search(t)) and not re.search(r"query is resolved|explained the charges", t)
+    reason = next((name for name, rx in REASON_RX if re.search(rx, t)), "none") if dispute else "none"
     p = re.search(r"will be made on (\d{4}-\d{2}-\d{2})", t)
     tone = "negative" if NEG.search(t) and not POS.search(t) else "positive" if POS.search(t) else "neutral"
     return {"dispute": "yes" if dispute else "no",
             "dispute_resolved": "yes" if dispute and "resolved" in t else "no",
-            "reason": m.group(1) if m and m.group(1) in REASONS else "none",
+            "reason": reason,
             "missing_po_or_contact": "yes" if re.search(r"po number|contact has changed", t) else "no",
             "promise_to_pay": "yes" if p else "no", "promised_date": p.group(1) if p else None,
-            "escalation": "yes" if "escalat" in t else "no",
+            "escalation": "yes" if re.search(r"escalat|manager to review", t) else "no",
             "claim": "yes" if re.search(r"\bclaim\b", t) else "no", "tone": tone}
 
 

@@ -5,7 +5,7 @@ import pytest
 from src.features.notes import extract_rules, validate, extract_llm, aggregate, FIELDS
 
 def test_rules_reader_schema_and_values():
-    o = validate(extract_rules("Customer disputes invoice 123 ($5.00): billed twice. Reason logged: duplicate charge."))
+    o = validate(extract_rules("Customer is disputing invoice 123 ($5.00): they think this was billed twice."))
     assert o["dispute"] == "yes" and o["reason"] == "duplicate charge" and o["tone"] == "negative"
     o = extract_rules("Customer queried the amount on 123; explained the charges and the query is resolved.")
     assert o["dispute"] == "no"                       # dispute-like query is not a dispute
@@ -31,7 +31,7 @@ def test_cutoff_and_no_note():
                         "invoice_date": pd.to_datetime(["2013-01-01"] * 2), "due_date": pd.to_datetime(["2013-01-31"] * 2)})
     notes = pd.DataFrame({"note_id": ["n1", "n2"], "customerID": ["c1", "c1"], "invoiceNumber": ["i1", "i1"],
                           "note_date": pd.to_datetime(["2013-01-05", "2013-01-25"]),   # n2 is after the Stage 2 date (Jan 21)
-                          "note_text": ["Customer disputes invoice i1. Reason logged: pricing.",
+                          "note_text": ["Customer is disputing invoice i1: the unit price isn't their contract rate.",
                                         "Dispute on i1 resolved; customer accepted."], "author_role": ["a", "a"]})
     sig = pd.DataFrame([{"note_id": i, **extract_rules(t)} for i, t in zip(notes.note_id, notes.note_text)])
     f = aggregate(notes, sig, inv).set_index("invoice_id")

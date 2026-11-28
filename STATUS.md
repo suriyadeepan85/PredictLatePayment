@@ -1,6 +1,6 @@
 # Status
 
-**Last checkpoint:** November 27, 2026 · **Due:** November 30, 2026 (finish by November 29)
+**Last checkpoint:** November 28, 2026 · **Due:** November 30, 2026 (finish by November 29)
 
 ## Current gate
 **G1 closed** (data contract v1.4, D-075). **G2 approved** (D-080). **G3 (model and fairness) in progress.** Review decisions made (D-102 to D-105). Stage 1 and the three IBM models validated; waiting for owner calls Q-015, Q-016; then the Evaluator scores the test sets.
@@ -14,7 +14,7 @@
 - History profile (`notebooks/02_history_profile.ipynb`)
 - Independent review done (`reports/review_2026-11-27.md`); technical fixes applied (D-099): calibrated probabilities, hardened masking, 32 tests
 - Notes generated with fake personal details, masked by rules (N6 = 0), read into signals (`notebooks/05_note_features.ipynb`)
-- IBM Model A, Model B, ceiling built (`notebooks/07_stage2_models.ipynb`); the headline result is invalid until Q-017 and Q-018 are decided (D-101)
+- Stage 2 rebuilt under D-103 and D-104: what-if curve of the notes' gain (`docs/img/stage2_notes_curve.png`, D-110)
 - Stage 1 trained and validated (`notebooks/06_stage1_model.ipynb`, MLflow); infrastructure and security spec (`specs/infrastructure.md`); contract v1.5 (masking)
 - G2 feature spec, shared code (`src/data/load.py`, `src/features/history.py`), tests (4 pass), `notebooks/04_features.ipynb`
 - Coordinator and role specs v0.1 in `specs/agents/` (D-079); index in `specs/README.md`

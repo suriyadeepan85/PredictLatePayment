@@ -12,13 +12,20 @@ FIRST = ["Alex", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Jamie", "Avery
          "Robin", "Sam", "Parker", "Reese", "Skyler", "Dana", "Kendall", "Rowan", "Emerson", "Hayden"]
 LAST = ["Sample", "Testwell", "Fakeham", "Mockford", "Placeholder", "Dummyson", "Notreal", "Synthton",
         "Exampleby", "Fictor"]
+# Varied, natural wording (D-104): no fixed "reason" line, and the reason is sometimes not stated.
 REASONS = {
-    "wrong amount": ["the invoiced amount does not match the PO", "they say the total is higher than agreed"],
-    "duplicate charge": ["they believe this was billed twice", "a duplicate of an earlier invoice, per the customer"],
-    "pricing": ["the unit price is not the contracted rate", "they dispute the price increase"],
-    "goods or service issue": ["part of the delivery was damaged", "the service was not completed as ordered"],
-    "other": ["they raised a query on the line items", "they want supporting documents before paying"],
+    "wrong amount": ["the total doesn't match their PO", "they say we charged more than was agreed",
+                     "the amount looks wrong to them"],
+    "duplicate charge": ["they think this was billed twice", "it looks like a repeat of last month's invoice to them"],
+    "pricing": ["the unit price isn't their contract rate", "they won't accept the new price",
+                "they were quoted a lower rate"],
+    "goods or service issue": ["part of the delivery arrived damaged", "the work wasn't finished as ordered",
+                               "some items never arrived"],
+    "other": ["they want proof of delivery first", "they have questions about some of the line items"],
 }
+OPENERS = ["Customer is disputing invoice {inv} ({amt}){why}.", "Customer won't pay {inv} ({amt}) for now{why}.",
+           "Call about {inv}: customer is contesting the charge{why}.", "AP team pushed back on {inv} ({amt}){why}.",
+           "Customer has put {inv} on hold{why}.", "Customer challenged invoice {inv}{why}."]
 GENERIC_TOPICS = ["claim", "missing PO", "contact change", "payment promise", "general query"]
 
 
@@ -53,8 +60,13 @@ def _date_between(start, end, rng):
     return start + pd.Timedelta(days=int(rng.integers(0, days + 1)))
 
 
-def generate_notes(invoices, seed=42, generic_share=0.33, dispute_like_share=0.2):
-    """Return (notes_raw, contacts). One row per note."""
+def generate_notes(invoices, seed=42, generic_share=0.33, dispute_like_share=0.2,
+                   late_noted_share=0.3, reason_stated_share=0.7):
+    """Return (notes_raw, contacts). One row per note.
+
+    late_noted_share: share of disputed invoices whose dispute thread starts only after the
+    Stage 2 date (between it and the due date), so it is invisible at scoring (D-104, A-008).
+    """
     inv = invoices[ALLOWED].copy()                      # rule 2: nothing else reaches the generator
     rng = np.random.default_rng(seed)
     contacts = make_contacts(sorted(inv["customer_id"].unique()), rng)
@@ -76,23 +88,31 @@ def generate_notes(invoices, seed=42, generic_share=0.33, dispute_like_share=0.2
             cutoff = start
         amt = f"${r.amount:,.2f}"
         if r.disputed == 1:                              # every disputed invoice gets a dispute thread
-            reason = rng.choice(list(REASONS)); detail = rng.choice(REASONS[reason])
-            d0 = _date_between(start, cutoff, rng)
-            add(r, d0, "invoice dispute", f"Customer disputes invoice {r.invoice_id} ({amt}): {detail}. Reason logged: {reason}.")
-            d = d0
+            reason = rng.choice(list(REASONS))
+            why = f": {rng.choice(REASONS[reason])}" if rng.random() < reason_stated_share else ""
+            if rng.random() < late_noted_share:          # noted only after the Stage 2 date
+                lo, hi = cutoff + pd.Timedelta(days=1), r.due_date
+                if hi < lo:
+                    hi = lo
+            else:
+                lo, hi = start, cutoff
+            d0 = _date_between(lo, hi, rng)
+            add(r, d0, "invoice dispute", rng.choice(OPENERS).format(inv=r.invoice_id, amt=amt, why=why))
+            d, cutoff_thread = d0, hi
             for _ in range(rng.integers(0, 3)):
-                d = _date_between(d, cutoff, rng)
+                d = _date_between(d, cutoff_thread, rng)
                 add(r, d, "invoice dispute", rng.choice([
                     f"Follow-up on the disputed invoice {r.invoice_id}; customer still waiting for our review.",
                     f"Sent supporting documents for {r.invoice_id}; customer has not confirmed yet.",
                     f"Customer frustrated about the delay resolving {r.invoice_id}."]))
             if rng.random() < 0.3:
-                d = _date_between(d, cutoff, rng)
-                add(r, d, "invoice dispute", f"Customer asked to escalate the dispute on {r.invoice_id} to a manager.")
+                d = _date_between(d, cutoff_thread, rng)
+                add(r, d, "invoice dispute", rng.choice([f"Customer asked to escalate the dispute on {r.invoice_id} to a manager.",
+                                                         f"Customer wants a manager to review {r.invoice_id}."]))
             if rng.random() < 0.25:                      # realistic contradiction: resolved disputes
-                d = _date_between(d, cutoff, rng)
+                d = _date_between(d, cutoff_thread, rng)
                 add(r, d, "invoice dispute", f"Dispute on {r.invoice_id} resolved; customer accepted the explanation and will pay as normal.")
-        elif rng.random() < generic_share:
+        if rng.random() < generic_share:                 # routine notes on any invoice, disputed or not (D-109)
             d = _date_between(start, cutoff, rng)
             if rng.random() < dispute_like_share:        # dispute-like but not a flagged dispute
                 add(r, d, "general query", f"Customer queried the amount on {r.invoice_id}; explained the charges and the query is resolved.")
@@ -111,7 +131,9 @@ def generate_notes(invoices, seed=42, generic_share=0.33, dispute_like_share=0.2
             else:
                 add(r, d, "general query", rng.choice(["Customer asked for a copy of the invoice. Sent.",
                                                        "Routine check-in; customer happy with the service.",
-                                                       "Customer asked to switch to electronic billing."]))
+                                                       "Customer asked to switch to electronic billing.",
+                                                       "Customer's payment run is on hold until month end; no issue with the invoice.",
+                                                       "AP team pushed back their payment run by a week due to a system upgrade."]))
     out = pd.DataFrame(notes).sort_values(["note_date", "customerID"]).reset_index(drop=True)
     out.insert(0, "note_id", [f"N{i:05d}" for i in range(1, len(out) + 1)])
     return out, contacts

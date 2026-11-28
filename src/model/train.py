@@ -157,3 +157,8 @@ def ibm_frame(b, note_features):
     df["log_amount"] = np.log1p(df["amount"])
     df = df.join(build_history(df, asof_col="invoice_date"))
     return df.merge(note_features, on="invoice_id", how="left")
+
+
+def stage2_population(df):
+    """Invoices still unpaid on their Stage 2 date (D-103)."""
+    return df[df["clear_date"] > df["stage2_date"]]
