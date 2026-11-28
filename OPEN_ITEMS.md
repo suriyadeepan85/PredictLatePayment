@@ -20,11 +20,11 @@ Format and rules: `specs/methodology.md`. Seeded November 26, 2026.
 | Q-012 | Also train a Stage-1-style model on IBM (no notes), so the Stage 2 gain from notes is measured on the same data? Claude recommends yes: without it, Stage 2 versus Stage 1 compares two different datasets | RESOLVED (D-071) | Owner | G1 |
 | Q-013 | Use countryCode as the IBM fairness group (5 codes, 387 to 616 invoices each, late rates 18% to 36%)? Proposed by Claude | RESOLVED (D-072) | Owner | G1 |
 | Q-014 | Move the system spec (Claude Doc "Late Payment Prototype v2") into the repo as `SYSTEM_SPEC.md`, so the repo is the single source for a rebuild? The Doc can remain the pitch narrative. Claude recommends yes | OPEN | Owner | G2 |
-| Q-015 | G3: is D-022's exception ("unless the group really is late more often") acceptable when it lets CA02 and new customers be flagged 6 to 7 times more often by false alarm (D-091)? Claude recommends tightening it: compare false alarms to each group's own late rate, and show these groups in the app as "review" rather than "chase" | OPEN | Owner | G3 |
-| Q-016 | G3: pass thresholds for M1 to M5 and default risk bands (proposed: high = top 20%, medium = next 30%) | OPEN | Owner | G3 |
-| Q-017 | Decision A: Stage 2 scores only invoices still unpaid on the Stage 2 date (review R-02)? Changes approved contract section 4. Claude recommends yes | OPEN | Owner | G3 |
-| Q-018 | Decision B: make the Stage 2 claim honest (review R-01): varied note wording with no fixed reason line, a share of disputes noted only after the Stage 2 date, and report a curve of the notes' gain against the share of disputes noted by day −10 instead of one number? Amends approved D-066. Claude recommends yes | OPEN | Owner | G3 |
-| Q-019 | Mark D-001 and D-004 SUPERSEDED by D-050 and D-051 (review R-12)? Only the owner can | OPEN | Owner | Governance |
+| Q-015 | G3: is D-022's exception ("unless the group really is late more often") acceptable when it lets CA02 and new customers be flagged 6 to 7 times more often by false alarm (D-091)? Claude recommends tightening it: compare false alarms to each group's own late rate, and show these groups in the app as "review" rather than "chase" | RESOLVED (D-102) | Owner | G3 |
+| Q-016 | G3: pass thresholds for M1 to M5 and default risk bands (proposed: high = top 20%, medium = next 30%) | RESOLVED (D-105) | Owner | G3 |
+| Q-017 | Decision A: Stage 2 scores only invoices still unpaid on the Stage 2 date (review R-02)? Changes approved contract section 4. Claude recommends yes | RESOLVED (D-103) | Owner | G3 |
+| Q-018 | Decision B: make the Stage 2 claim honest (review R-01): varied note wording with no fixed reason line, a share of disputes noted only after the Stage 2 date, and report a curve of the notes' gain against the share of disputes noted by day −10 instead of one number? Amends approved D-066. Claude recommends yes | RESOLVED (D-104) | Owner | G3 |
+| Q-019 | Mark D-001 and D-004 SUPERSEDED by D-050 and D-051 (review R-12)? Only the owner can | RESOLVED (D-001, D-004 superseded) | Owner | Governance |
 
 ## Assumptions
 
@@ -37,3 +37,4 @@ Format and rules: `specs/methodology.md`. Seeded November 26, 2026.
 | A-005 | The approach transfers to the client; the trained model does not and is retrained there | OPEN | Spec v2, section 20 |
 | A-006 | IBM disputes are raised before the Stage 2 scoring date (due date minus 10 days), so dispute notes dated before then are realistic | OPEN | The data has no dispute date |
 | A-007 | The baseline date is entered on the invoice when it is posted (SAP's baseline date for payment, which can be future-dated, e.g. to delivery), so the due date and payment terms are known at Stage 1 scoring. 3,198 invoices have a baseline after posting (median 2 days, max 43); 97% are business unit CA02 with term CA10 | OPEN | Review R-05; checked Nov 27: due date = baseline + 10 days for 95% of them |
+| A-008 | Default share of disputes noted only after the Stage 2 date is 30% (D-104); the deck shows the full range 0 to 100% | OPEN | No real data on when disputes are logged |

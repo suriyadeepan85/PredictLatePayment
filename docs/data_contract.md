@@ -1,6 +1,6 @@
-# Data Contract v1.5: Late Payment Prediction (Stage 1 and Stage 2)
+# Data Contract v1.6: Late Payment Prediction (Stage 1 and Stage 2)
 
-**Status:** APPROVED, gate G1 closed (D-075) · **Date:** November 27, 2026 · **Owner:** Suriyadeepan Narayanasamy
+**Status:** APPROVED, gate G1 closed (D-075) · **Date:** November 27, 2026 (v1.6) · **Owner:** Suriyadeepan Narayanasamy
 **Based on:** the owner's v1.1 (feature eligibility, history coverage, prediction-time rules), extended for the approved scope changes: note features and a second prediction 10 days before the due date (D-050, D-051, D-057, D-059). v1.3 adds the owner's November 26 voice-session decisions on Stage 2 inputs, notes and the IBM split (D-064 to D-068).
 
 This contract defines the data, the targets, the quality requirements and the rules for what may be used at prediction time. It does not select the final models or define application behaviour.
@@ -38,7 +38,7 @@ Licence limits apply to development, demonstration and any distribution.
 | Stage | Dataset | Scoring time | Information allowed |
 |---|---|---|---|
 | Stage 1 | A | The invoice's posting date | Invoice fields; history from the customer's invoices **paid before the posting date** |
-| Stage 2 | B | **Due date minus 10 calendar days** | The same inputs as Stage 1, with history **frozen at the invoice date** (invoices paid before the invoice date), plus signals from notes dated **on or before** the Stage 2 scoring date. The notes are the only new information (D-064) |
+| Stage 2 | B | **Due date minus 10 calendar days**, only for invoices still unpaid on that date (D-103) | The same inputs as Stage 1, with history **frozen at the invoice date** (invoices paid before the invoice date), plus signals from notes dated **on or before** the Stage 2 scoring date. The notes are the only new information (D-064) |
 
 - No feature may use information unavailable at its stage's scoring time.
 - Stage 2 deliberately does not refresh history between the invoice date and the Stage 2 date, so any gain over Stage 1 comes from the notes alone (D-064).
@@ -97,7 +97,7 @@ Approved by the owner, November 26 (D-065, D-066, D-067). The notes simulate the
 | note_text | string | Synthetic; no real names. The raw file contains obviously fake personal details (D-088); the masked file does not |
 
 **Which invoices get notes (D-066):**
-- Disputed = Yes: always a dispute thread linked to the invoice.
+- Disputed = Yes: always a dispute thread linked to the invoice. In 30% of them (default, A-008) the thread starts only after the Stage 2 date, so it is invisible at scoring (D-104). Dispute notes use varied wording; the reason is sometimes not stated, and there is no fixed reason line.
 - Disputed = No: 67% get no notes; 33% get a generic note (claim, missing PO, contact change, payment promise or general query).
 - One in five generic notes reads like a dispute (a query that was raised and resolved), so a dispute-sounding note does not always mean a flagged dispute.
 
@@ -113,7 +113,7 @@ Approved by the owner, November 26 (D-065, D-066, D-067). The notes simulate the
 
 **Personal details and masking (D-088):**
 1. Generated notes include obviously fake personal details: contact names from a fixed fake list, `@example.com` emails, `555` phone numbers, and reference numbers.
-2. A rules-based masking step (regular expressions plus the customer's fake contact list, no LLM) writes a second file. Names become one-way stand-ins such as "Contact 017", made from a salted hash, so the same person always gets the same label. Emails, phones and references become `[EMAIL]`, `[PHONE]` and `[REF]`. No lookup table is kept.
+2. A rules-based masking step (regular expressions plus the customer's fake contact list, no LLM) writes a second file. Known business keys are protected before any rule runs; each contact's known phones and emails are masked in any format; full names, "Last, First" and name parts are masked as whole words (D-099). Names become one-way stand-ins such as "Contact 017", made from a salted hash, so the same person always gets the same label. Emails, phones and references become `[EMAIL]`, `[PHONE]` and `[REF]`. No lookup table is kept.
 3. `customerID`, `invoiceNumber` and `note_id` are never masked: they are the join keys.
 4. Two files: `notes_raw` (restricted; never read by the note reader or the app) and `notes_masked` (used by everything downstream).
 5. The masking rules live in `config/masking.yaml`, so a client can add its own patterns without changing code.
@@ -153,7 +153,7 @@ Applied in this order. Row counts affected by each rule are logged. Any rule mar
 | Q9 | Amount at or below 0 | Fail | 0 |
 | Q10 | Payment terms outside 0 to 120 days | Fail | 0 |
 | Q11 | Column more than 95% missing, or 99.9% one value | Drop column | area_business, posting_id |
-| Q12 | Category with fewer than 20 rows | Group into OTHER | 40 payment-term codes; U005, U007 |
+| Q12 | Category with fewer than 20 rows | Group into OTHER | 44 payment-term codes (rare or absent in training); U005, U007 (counted on training rows only, D-099) |
 | Q13 | History average days late | Cap at ±90 days | At feature time |
 
 ### Dataset B
@@ -165,7 +165,7 @@ The same rules apply where the columns exist (Q2, Q4, Q5, Q7, Q9). Checked in `n
 | # | Rule | Action |
 |---|---|---|
 | N1 | Note's customerID doesn't exist, or its invoiceNumber doesn't exist for that customer | Fail |
-| N2 | Invoice note dated after that invoice's Stage 2 scoring date or before its invoice date | Fail |
+| N2 | Invoice note dated before its invoice date or after its due date | Fail |
 | N3 | Generator input contains an outcome column | Fail |
 | N4 | Note text contains a real company or person name | Fail |
 | N5 | Generated mix differs from section 6 (every disputed invoice has a dispute thread; about 33% of undisputed invoices have a note) | Fail |
@@ -182,7 +182,9 @@ The same rules apply where the columns exist (Q2, Q4, Q5, Q7, Q9). Checked in `n
 | A: replay (open) | 9,654 | No outcome | Demo only; never in any metric |
 | B: all invoices | 2,466 | 28.4% | Labelled population |
 | B: train (invoice date before Jul 1, 2013) | 1,930 | 30.3% (585 late) | Stage 2 training |
-| B: test (invoice date Jul 1, 2013 onward) | 536 | 21.5% (115 late; 122 disputed) | Stage 2 evaluation |
+| B: test (invoice date Jul 1, 2013 onward) | 536 | 21.5% (115 late; 122 disputed) | |
+| B: Stage 2 population, train (unpaid on the Stage 2 date) | 1,345 | 43.5% | Stage 2 training (D-103) |
+| B: Stage 2 population, test | 320 | 35.9% (102 disputed) | Stage 2 evaluation |
 
 Splits are chronological, never random, and change only through an approved decision (D-063, D-068). For Dataset B, scikit-learn `TimeSeriesSplit` (5 folds) is a second check that patterns hold over time: disputed invoices are late 44% to 66% of the time in every fold, undisputed 15% to 21% (`notebooks/03_ibm_split.ipynb`).
 
@@ -227,3 +229,4 @@ Splits are chronological, never random, and change only through an approved deci
 | Nov 26, 2026 | v1.3 (owner-approved changes from the voice session): Stage 2 history frozen at invoice date; notes linked by customer with topic and generation mix; section 6 renamed Notes data rules; N5 added; IBM SHA, quality check results and split counts |
 | Nov 26, 2026 | v1.4: G1 closed. Dataset B roles, scoring times, countryCode fairness group approved; Model A and ceiling model added as evaluation-only comparisons; leakage rule 4 clarified |
 | Nov 27, 2026 | v1.5: fake personal details in generated notes, rules-based one-way masking, raw and masked files, rule N6 (D-088) |
+| Nov 27, 2026 | v1.6 (owner-approved): Stage 2 population is invoices unpaid on the Stage 2 date (D-103); honest note generation with 30% late-noted disputes (D-104); N2 widened; masking protects keys and known values; Q12 counted on training rows only (D-099) |

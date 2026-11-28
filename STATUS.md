@@ -3,7 +3,7 @@
 **Last checkpoint:** November 27, 2026 · **Due:** November 30, 2026 (finish by November 29)
 
 ## Current gate
-**G1 closed** (data contract v1.4, D-075). **G2 approved** (D-080). **G3 (model and fairness) in progress:** Stage 1 and the three IBM models validated; waiting for owner calls Q-015, Q-016; then the Evaluator scores the test sets.
+**G1 closed** (data contract v1.4, D-075). **G2 approved** (D-080). **G3 (model and fairness) in progress.** Review decisions made (D-102 to D-105). Stage 1 and the three IBM models validated; waiting for owner calls Q-015, Q-016; then the Evaluator scores the test sets.
 
 ## Done
 - Spec v2 created; spec v1 restored and unchanged
@@ -23,7 +23,6 @@
 - Methodology set up: `CLAUDE.md`, `DECISIONS.md`, `OPEN_ITEMS.md`, `STATUS.md`, `specs/methodology.md`
 
 ## Waiting for the owner
-1. Decisions from the independent review: Q-017 (A: Stage 2 population), Q-018 (B: honest Stage 2 claim), Q-015 (C: fairness rule); also Q-016 (risk bands), Q-019 (supersede D-001, D-004), and approval of D-099 (review fixes, incl. contract v1.6 wording for training-only rare codes and known-value masking)
 1b. Approve `specs/infrastructure.md` and do owner steps 2, 3, 5 to 9
 2. Approve the coordinator spec (human-owned, `specs/agents/coordinator.md` section 3)
 3. Q-014: copy the system spec into the repo (recommended)

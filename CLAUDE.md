@@ -3,12 +3,12 @@
 Owner and decision maker: Suriyadeepan Narayanasamy. Claude builds; the owner approves.
 
 ## Start of every session
-1. Read `STATUS.md`, then `OPEN_ITEMS.md`.
+1. Read `STATUS.md`, then `OPEN_ITEMS.md`, then the latest entry in `docs/session_log.md`.
 2. Read the spec for the current gate in `specs/` or `docs/`.
 3. Tell the owner the current gate and what is waiting for approval before doing new work.
 
 ## End of every session (checkpoint)
-1. Add or update records in `DECISIONS.md` and `OPEN_ITEMS.md`.
+1. Add or update records in `DECISIONS.md` and `OPEN_ITEMS.md`, and add the session to `docs/session_log.md`.
 2. Update `STATUS.md`: done, next, waiting for approval.
 3. Commit and push. Unpushed work can be lost: the build workspace is temporary.
 

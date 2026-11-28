@@ -11,6 +11,7 @@ The repo is the source for rebuilding the prototype without the chat (D-077). Me
 | LLM Engineer (and app, for now) | `agents/llm_engineer.md` | 7.3 |
 | DevOps Engineer | `agents/devops_engineer.md` | 7.4, 8 |
 | QA Engineer | `agents/qa_engineer.md` | 7.5 |
+| Reviewer (independent review, part of QA) | `agents/reviewer.md` | 7.5, plus D-098 |
 | Evaluator | `agents/evaluator.md` | Added (not in v1.0) |
 
 ## Component specs (10-section format, methodology 5.3)

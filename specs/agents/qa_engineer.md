@@ -20,7 +20,7 @@ Check, independently of the builder, that each deliverable meets its spec. QA ch
 |---|---|---|
 | **Before work (plan review)** | Every instruction in the coordinator's task brief points to an approved spec section or decision; nothing is added, dropped or reinterpreted; acceptance criteria are copied, not invented | Pass, or a list of mismatches; the task does not start until they are fixed |
 | **After work (build review)** | The result matches the brief and its spec: tests, counts, interfaces, leakage rules; the change-control steps were followed for any change | `reports/qa_<component>_<date>.md` |
-| **At milestones (independent review)** | A fresh session that sees only the repo, never the build conversation, checks the work end to end and tries to rebuild key numbers from the specs alone (D-077) | `reports/review_<date>.md` |
+| **At milestones (independent review)** | A fresh session that sees only the repo, never the build conversation, checks the work end to end and tries to rebuild key numbers from the specs alone (D-077) | `reports/review_<date>.md`; goals, rules and checklist in `reviewer.md` |
 
 ## 4. Rules
 QA does not fix what it finds; it reports, and the coordinator assigns the fix. QA may reject a deliverable. Reports go to `reports/qa_<component>_<date>.md`: what was checked, how, results, failures, evidence.
