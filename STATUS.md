@@ -1,6 +1,6 @@
 # Status
 
-**Last checkpoint:** November 26, 2026 · **Due:** November 30, 2026 (finish by November 29)
+**Last checkpoint:** November 27, 2026 · **Due:** November 30, 2026 (finish by November 29)
 
 ## Current gate
 **G1 closed** (data contract v1.4, D-075). **G2 (feature list) drafted, waiting for approval** (`specs/features.md`, D-080).
@@ -22,8 +22,8 @@
 1. G2: approve `specs/features.md` (D-080)
 2. Approve the coordinator spec (human-owned, `specs/agents/coordinator.md` section 3)
 3. Q-014: copy the system spec into the repo (recommended)
-2. Confirm or change the seeded records in `DECISIONS.md` (all PROPOSED except D-007)
-3. Answer Q-001 and Q-002 in `OPEN_ITEMS.md`
+4. Answer Q-001 (organizer approval) and Q-002 (hosted or laptop)
+5. Confirm the older PROPOSED records; D-001 and D-004 are out of date (superseded in practice by D-050, D-051)
 
 ## Next
 1. Train the baseline and XGBoost; evaluation and fairness check; reviewer pass (G3)
@@ -32,6 +32,6 @@
 ## Plan
 | Day | Focus | State |
 |---|---|---|
-| 1 | Data and model | In progress: G1 |
+| 1 | Data and model | In progress: G1 closed, G2 drafted, model not started |
 | 2 | Application | Not started |
 | 3 | Demo and deck | Not started |
