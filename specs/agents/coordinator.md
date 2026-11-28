@@ -1,6 +1,6 @@
 # Coordinator Agent Specification
 
-**Version:** 0.1 · **Date:** November 26, 2026 · **Methodology:** owner's Development Methodology Specification v1.0, section 5.2 · **Status:** PROPOSED. Needs the owner's approval: under methodology section 5, the coordinator spec is human-owned, because it sets the coordinator's own authority
+**Version:** 0.1 · **Date:** November 26, 2026 · **Methodology:** owner's Development Methodology Specification v1.0, section 5.2 · **Status:** PROPOSED. Working mode approved (D-096): the coordinator runs the plan and brings the owner decisions only. The spec itself needs the owner's approval: under methodology section 5, the coordinator spec is human-owned, because it sets the coordinator's own authority
 
 In the hackathon build, Claude does this job inside the chat session, with the owner approving at gates. In the full build, a dedicated Coordinator Agent runs it and hands tasks to the role agents in this folder.
 
@@ -70,5 +70,24 @@ Escalate to the owner when: a business-critical item from section 3 is involved;
 ## 12. Permission boundaries
 No AWS deployment, no spending, no new data sources, no outbound sharing without owner approval. Raw and generated data never go into git.
 
-## 13. Status reporting
+## 13. Change control (D-097)
+Applies to any change to an approved spec, decision, contract rule, or to code, data handling or a model that produced a reported result.
+
+| Step | What happens | Evidence |
+|---|---|---|
+| 1. Record | A change request (CR-###) in `DECISIONS.md` as PROPOSED: what changes, why, who asked, which record it replaces, and the impact: specs, code, models, results and tasks touched, and what must be re-run | The CR line |
+| 2. Approve | The owner approves, if the change touches section 3 items. Purely technical changes inside an approved spec need no approval but still get a CR | Owner quote, dated |
+| 3. Spec first | The affected spec is updated and its change log notes the CR | Spec diff |
+| 4. Branch | Code changes on a branch `cr-###-short-name`; `main` keeps the last working version | Branch name |
+| 5. Re-run and compare | Tests pass; affected notebooks re-run; new metrics logged to MLflow next to the old run, tagged with the CR | MLflow run IDs, test output |
+| 6. Review | QA checks the change matches the CR and nothing else moved (QA spec, section 3) | `reports/` entry |
+| 7. Merge and tag | Merge to `main`, tag `good-YYYYMMDD-N`; the replaced record becomes SUPERSEDED, never deleted | Tag, record status |
+
+Rules that always hold:
+- Commit after every verified step and push at every checkpoint; nothing stays only in the workspace.
+- A working version is tagged `good-YYYYMMDD-N` before any change that could break it (code, models) and `infra-good-...` for infrastructure.
+- Models are never overwritten: each run is a new MLflow version; the registry keeps earlier versions.
+- In the hackathon, a CR that is quick and low-risk may be done on `main`, provided steps 1, 3, 5 and 7 are followed and the last good tag exists.
+
+## 14. Status reporting
 `STATUS.md` holds the current gate, what is done, what is next and what is waiting for the owner. It is updated at every checkpoint and pushed.
